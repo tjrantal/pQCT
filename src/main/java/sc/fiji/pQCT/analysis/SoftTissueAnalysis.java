@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package sc.fiji.pQCT.analysis;
 
-import sc.fiji.pQCT.selectroi.SelectSoftROI;
+import sc.fiji.pQCT.selectroi.RoiSelector;
 
 public class SoftTissueAnalysis {
 
@@ -53,7 +53,7 @@ public class SoftTissueAnalysis {
 	public double peeledA;
 	public double peeledD;
 
-	public SoftTissueAnalysis(final SelectSoftROI roi) {
+	public SoftTissueAnalysis(final RoiSelector roi) {
 
 		double weightedFatArea = 0;
 		double weightedLimbArea = 0;

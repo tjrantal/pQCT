@@ -47,6 +47,7 @@ public abstract class RoiSelector {
 	public final ImageAndAnalysisDetails details;
 	public final double[] scaledImage;
 	public final double[] softScaledImage;
+	public byte[] eroded;
 	public final double minimum;
 	public final int height;
 	public final int width;

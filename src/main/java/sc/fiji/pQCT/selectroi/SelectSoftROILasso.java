@@ -35,7 +35,6 @@ import java.util.concurrent.ExecutionException;
 
 public class SelectSoftROILasso extends RoiSelector{
 	int radialDivisions = 720;
-	public byte[] eroded = null;
 	//ImageJ constructor
 	public SelectSoftROILasso(ScaledImageData dataIn,ImageAndAnalysisDetails detailsIn, ImagePlus imp) throws ExecutionException{
 		super(dataIn,detailsIn, imp);	//,boneThreshold,setRoi);

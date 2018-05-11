@@ -42,8 +42,6 @@ import sc.fiji.pQCT.io.ScaledImageData;
 
 public class SelectSoftROI extends RoiSelector {
 
-	public byte[] eroded;
-
 	// ImageJ constructor
 	public SelectSoftROI(final ScaledImageData dataIn,
 		final ImageAndAnalysisDetails detailsIn, final ImagePlus imp)

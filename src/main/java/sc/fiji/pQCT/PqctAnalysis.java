@@ -361,7 +361,7 @@ public class PqctAnalysis implements PlugIn {
 		}
 		if (details.stOn) {
 			final SoftTissueAnalysis softTissueAnalysis = new SoftTissueAnalysis(
-				(SelectSoftROI) softRoi);
+				(RoiSelector) softRoi);
 			results = printSoftTissueResults(results, softTissueAnalysis);
 			if (makeImage && resultImage != null) {
 				resultImage = tintSoftTissue(resultImage, softRoi.softSieve);
