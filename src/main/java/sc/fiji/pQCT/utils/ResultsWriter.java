@@ -53,7 +53,7 @@ public class ResultsWriter {
 			"Patient ID", "Patient's Birth Date", "Acquisition Date", "Pixel Spacing",
 			"ObjLen" };
 		final String[] parameters = Stream.of(details.airThreshold,
-			details.fatThreshold, details.muscleThreshold, details.marrowThreshold,
+			details.fatThreshold, details.muscleThreshold, details.edgeDivisions, details.marrowThreshold,
 			details.softThreshold, details.rotationThreshold, details.areaThreshold,
 			details.bMDThreshold, details.scalingFactor, details.constant).map(
 				Object::toString).toArray(String[]::new);
@@ -85,7 +85,8 @@ public class ResultsWriter {
 		for (final String parameter : parameters) {
 			resultsBuilder.append(parameter).append("\t");
 		}
-
+		
+		resultsBuilder.append(details.lassoOn).append("\t");
 		resultsBuilder.append(details.manualRotation).append("\t");
 		resultsBuilder.append(details.flipDistribution).append("\t");
 		resultsBuilder.append(details.guessFlip).append("\t");
@@ -107,9 +108,9 @@ public class ResultsWriter {
 		final StringBuilder headings = new StringBuilder(String.join("\t",
 			"File Name", "Patient's Name", "Patient ID", "Patient's Birth Date",
 			"Acquisition Date", "Pixel Spacing", "Object Length", "Air Threshold",
-			"Fat Threshold", "Muscle Threshold", "Marrow Threshold", "Soft Threshold",
+			"Fat Threshold", "Muscle Threshold", "Edge Divisions", "Marrow Threshold", "Soft Threshold",
 			"Rotation Threshold", "Area Threshold", "bMD Threshold",
-			"Scaling Coefficient", "Scaling Constant", "Manual Rotation",
+			"Scaling Coefficient", "Scaling Constant","Lasso", "Manual Rotation",
 			"Flip Distribution", "Guess right", "Guess larger", "Stacked bones",
 			"Invert guess", "Allow Cleaving", "Prevent PVE peeling", "Roi choice",
 			"Rotation choice", "Flip Horizontal", "Flip Vertical"));
