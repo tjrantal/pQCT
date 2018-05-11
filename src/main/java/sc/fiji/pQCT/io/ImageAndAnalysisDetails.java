@@ -34,6 +34,7 @@ public class ImageAndAnalysisDetails {
 	public final boolean flipVertical;
 	public final boolean noFiltering;
 	public final boolean sleeveOn;
+	public boolean lassoOn;
 	public final double scalingFactor;
 	public final double constant;
 
@@ -89,6 +90,7 @@ public class ImageAndAnalysisDetails {
 		flipVertical = defaultTopValues[1];
 		noFiltering = defaultTopValues[2];
 		sleeveOn = defaultTopValues[3];
+		lassoOn = defaultTopValues[4];
 
 		airThreshold = thresholdsAndScaling[0];
 		fatThreshold = thresholdsAndScaling[1];
