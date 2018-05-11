@@ -148,9 +148,9 @@ public class PqctAnalysis implements PlugIn {
 		// Get parameters for scaling the image and for thresholding
 		final GenericDialog dialog = new GenericDialog("Analysis parameters");
 		final String[] topLabels = { "Flip_horizontal", "Flip_vertical",
-			"No_filtering", "Measurement_tube" };
-		final boolean[] defaultTopValues = new boolean[4];
-		dialog.addCheckboxGroup(1, 4, topLabels, defaultTopValues);
+			"No_filtering", "Measurement_tube","Lasso" };
+		final boolean[] defaultTopValues = new boolean[topLabels.length];
+		dialog.addCheckboxGroup(1, tobLabels.length, topLabels, defaultTopValues);
 		dialog.addNumericField("Air_threshold", -40, 4, 8, null);
 		dialog.addNumericField("Fat threshold", 40, 4, 8, null);
 		dialog.addNumericField("Muscle_threshold", 40, 4, 8, null);
