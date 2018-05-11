@@ -61,6 +61,7 @@ import sc.fiji.pQCT.io.ScaledImageData;
 import sc.fiji.pQCT.selectroi.RoiSelector;
 import sc.fiji.pQCT.selectroi.SelectROI;
 import sc.fiji.pQCT.selectroi.SelectSoftROI;
+import sc.fiji.pQCT.selectroi.SelectSoftROILasso;
 import sc.fiji.pQCT.utils.ResultsWriter;
 
 public class PqctAnalysis implements PlugIn {
@@ -78,6 +79,13 @@ public class PqctAnalysis implements PlugIn {
 		// Concentric distribution analysis sectorWidth, Concentric distribution
 		// analysis sectors
 		final int[] sectorsAndDivisions = { 10, 3, 10, 10 };
+		
+		//A ROI appears on the image every now and then, haven't figured out why -> remove any unwanted rois prior to soft-tissue analysis. If no ROIs are to be found when starting the analysis remove any that appear subsequently
+		byte removeROIs = 0;
+		if (imp.getRoi() == null){
+			removeROIs = 1;
+		}
+		
 
 		String imageInfo = new ImageInfo().getImageInfo(imp);
 		// Check image calibration
@@ -148,9 +156,9 @@ public class PqctAnalysis implements PlugIn {
 		// Get parameters for scaling the image and for thresholding
 		final GenericDialog dialog = new GenericDialog("Analysis parameters");
 		final String[] topLabels = { "Flip_horizontal", "Flip_vertical",
-			"No_filtering", "Measurement_tube","Lasso" };
+			"No_filtering", "Measurement_tube", "Lasso" };
 		final boolean[] defaultTopValues = new boolean[topLabels.length];
-		dialog.addCheckboxGroup(1, tobLabels.length, topLabels, defaultTopValues);
+		dialog.addCheckboxGroup(1, topLabels.length, topLabels, defaultTopValues);
 		dialog.addNumericField("Air_threshold", -40, 4, 8, null);
 		dialog.addNumericField("Fat threshold", 40, 4, 8, null);
 		dialog.addNumericField("Muscle_threshold", 40, 4, 8, null);
@@ -293,8 +301,14 @@ public class PqctAnalysis implements PlugIn {
 			if (details.stOn) {
 				// An ROI appears on the image every now and then, haven't figured out
 				// why -> remove any unwanted rois prior to soft-tissue analysis
-				imp.setRoi(null, false);
-				softRoi = new SelectSoftROI(scaledImageData, details, imp);
+				if (removeROIs == 1){
+					imp.setRoi(null, false);
+				}
+				if (details.lassoOn){
+					softRoi = new SelectSoftROILasso(scaledImageData, details,imp);
+				}else{
+					softRoi = new SelectSoftROI(scaledImageData, details, imp);
+				}
 				if (roi == null) {
 					roi = softRoi;
 				}
