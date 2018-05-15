@@ -52,7 +52,7 @@ public class ResultsWriter {
 		final String[] propertyNames = { "File Name", "Patient's Name",
 			"Patient ID", "Patient's Birth Date", "Acquisition Date", "Pixel Spacing",
 			"ObjLen" };
-		final String[] parameters = Stream.of(details.airThreshold,
+		final String[] parameters = Stream.of(details.peelingPercentage,details.airThreshold,
 			details.fatThreshold, details.muscleThreshold, details.edgeDivisions, details.marrowThreshold,
 			details.softThreshold, details.rotationThreshold, details.areaThreshold,
 			details.bMDThreshold, details.scalingFactor, details.constant).map(
@@ -87,6 +87,7 @@ public class ResultsWriter {
 		}
 		
 		resultsBuilder.append(details.lassoOn).append("\t");
+		resultsBuilder.append(details.trAnaOn).append("\t");
 		resultsBuilder.append(details.manualRotation).append("\t");
 		resultsBuilder.append(details.flipDistribution).append("\t");
 		resultsBuilder.append(details.guessFlip).append("\t");
@@ -107,10 +108,10 @@ public class ResultsWriter {
 	{
 		final StringBuilder headings = new StringBuilder(String.join("\t",
 			"File Name", "Patient's Name", "Patient ID", "Patient's Birth Date",
-			"Acquisition Date", "Pixel Spacing", "Object Length", "Air Threshold",
+			"Acquisition Date", "Pixel Spacing", "Object Length", "Peeling percentage", "Air Threshold",
 			"Fat Threshold", "Muscle Threshold", "Edge Divisions", "Marrow Threshold", "Soft Threshold",
 			"Rotation Threshold", "Area Threshold", "bMD Threshold",
-			"Scaling Coefficient", "Scaling Constant","Lasso", "Manual Rotation",
+			"Scaling Coefficient", "Scaling Constant","Lasso","Trabecular Visualisation", "Manual Rotation",
 			"Flip Distribution", "Guess right", "Guess larger", "Stacked bones",
 			"Invert guess", "Allow Cleaving", "Prevent PVE peeling", "Roi choice",
 			"Rotation choice", "Flip Horizontal", "Flip Vertical"));
@@ -136,7 +137,7 @@ public class ResultsWriter {
 				"Stratec CoA [mm2]", "sSI [mm3]", "SSImax [mm3]", "SSImin [mm3]",
 				"iPo [mm4]", "Imax [mm4]", "Imin [mm4]", "dwIPo [mg/cm]",
 				"dwImax [mg/cm]", "dwImin [mg/cm]", "ToD [mg/cm3]", "ToA[mm2]",
-				"medullaryArea [mm2]", "bSId[g/cm4]"));
+		"medullaryArea [mm2]", "bSId[g/cm4]","Peeled TrD [mg/cm3]","Peeled TrA [mm2]"));
 		}
 		if (details.mOn) {
 			for (int i = 0; i < (360 / details.sectorWidth); ++i) {

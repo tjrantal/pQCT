@@ -35,9 +35,11 @@ public class ImageAndAnalysisDetails {
 	public final boolean noFiltering;
 	public final boolean sleeveOn;
 	public boolean lassoOn;
+	public boolean trAnaOn;
 	public final double scalingFactor;
 	public final double constant;
 
+	public final double peelingPercentage; // Peeling percentage for trabecular analysis
 	public final double airThreshold; // Fat lower threshold
 	public final double fatThreshold; // Fat higher threshold
 	public final double muscleThreshold; // Muscle lower threshold
@@ -92,18 +94,20 @@ public class ImageAndAnalysisDetails {
 		noFiltering = defaultTopValues[2];
 		sleeveOn = defaultTopValues[3];
 		lassoOn = defaultTopValues[4];
+		trAnaOn = defaultTopValues[5];
 
-		airThreshold = thresholdsAndScaling[0];
-		fatThreshold = thresholdsAndScaling[1];
-		muscleThreshold = thresholdsAndScaling[2];
-		edgeDivisions = thresholdsAndScaling[3];
-		marrowThreshold = thresholdsAndScaling[4];
-		softThreshold = thresholdsAndScaling[5];
-		rotationThreshold = thresholdsAndScaling[6];
-		areaThreshold = thresholdsAndScaling[7];
-		bMDThreshold = thresholdsAndScaling[8];
-		scalingFactor = thresholdsAndScaling[9];
-		constant = thresholdsAndScaling[10];
+		peelingPercentage = thresholdsAndScaling[0];
+		airThreshold = thresholdsAndScaling[1];
+		fatThreshold = thresholdsAndScaling[2];
+		muscleThreshold = thresholdsAndScaling[3];
+		edgeDivisions = thresholdsAndScaling[4];
+		marrowThreshold = thresholdsAndScaling[5];
+		softThreshold = thresholdsAndScaling[6];
+		rotationThreshold = thresholdsAndScaling[7];
+		areaThreshold = thresholdsAndScaling[8];
+		bMDThreshold = thresholdsAndScaling[9];
+		scalingFactor = thresholdsAndScaling[10];
+		constant = thresholdsAndScaling[11];
 		boneThreshold = areaThreshold;
 
 		roiChoice = alignmentStrings[0];

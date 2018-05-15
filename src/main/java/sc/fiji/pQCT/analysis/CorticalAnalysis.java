@@ -28,6 +28,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package sc.fiji.pQCT.analysis;
 
+//Debugging
+//import ij.IJ;
+//import ij.process.ByteProcessor;
+//import ij.process.ImageProcessor;
+//import ij.ImagePlus;
+
 import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 
@@ -57,8 +63,11 @@ public class CorticalAnalysis {
 	public double sSI;
 	// Stratec/Geanie compatible CoD and CoA
 	public byte[] cortexSieve;
+	public byte[] peeledSieve;
 	public double CoD;
 	public double CoA;
+	public double peeledTrA;
+	public double peeledTrD;
 
 	public CorticalAnalysis(final SelectROI roi) {
 		ToA = 0;
@@ -81,9 +90,51 @@ public class CorticalAnalysis {
 		}
 		ToD /= ToA;
 		final double spacingSq = roi.pixelSpacing * roi.pixelSpacing;
+		final double boneAreaPixels = ToA;
 		ToA *= spacingSq;
 		marrowDensity /= marrowArea;
 		marrowArea *= spacingSq;
+		
+		//Trabecular analysis
+		peeledSieve = roi.sieve.clone();
+		
+		//Visualise sieve before and after
+		//ImagePlus tempImage = new ImagePlus("Prior to peeling", new ByteProcessor(roi.width,roi.height, peeledSieve.clone()));
+		//tempImage.setDisplayRange(0d,1d);
+		//tempImage.show();
+		
+		//Peel sieve until less than 100-roi.details.peelingPercentage
+		double peeledA = boneAreaPixels;
+		//IJ.log("Start peeling");
+		while (peeledA > boneAreaPixels*((100d-roi.details.peelingPercentage)/100d)){
+			peeledSieve = DistributionAnalysis.erode(peeledSieve, roi.width, roi.height, (byte) 0);
+			peeledA = 0d;
+			for (int i = 0; i < iterations; i++) {
+				if (peeledSieve[i] >= 1) {
+					++peeledA;
+				}
+			}
+		
+		}
+		//ImagePlus tempImage2 = new ImagePlus("After peeling",new ByteProcessor(roi.width,roi.height, peeledSieve.clone()));
+		//tempImage2.setDisplayRange(0d,1d);
+		//tempImage2.show();
+
+		
+		//IJ.log(String.format("After peeling %2f %s",peeledA/boneAreaPixels*100d,"%"));
+		//calculate peeledTrA and peeledTrD
+		peeledTrA = 0d;
+		peeledTrD = 0d;
+		for (int i = 0; i < iterations; i++) {
+			if (peeledSieve[i] <= 0) {
+				continue;
+			}
+			final double value = roi.scaledImage[i];
+			peeledTrA++;
+			peeledTrD += value;
+		}
+		peeledTrD /= peeledTrA;
+		peeledTrA *= spacingSq;
 
 		// Mass density is calculated by converting the bMD to Hounsfield Units, and
 		// scaling the HUs to comparable HUs between machinesHUs are then scaled to

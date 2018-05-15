@@ -259,7 +259,7 @@ public class DistributionAnalysis {
 
 	// TODO Refactor into a static utility method for all classes instead of
 	// repeating code
-	private static double[] erode(final double[] data, final int width,
+	public static double[] erode(final double[] data, final int width,
 		final int height, final double bgVal)
 	{
 		// Erode algorithm
@@ -286,6 +286,36 @@ public class DistributionAnalysis {
 		}
 		return data;
 	}
+	
+	//Overload of the erode for byte array
+	public static byte[] erode(final byte[] data, final int width,
+		final int height, final byte bgVal)
+	{
+		// Erode algorithm
+		// Modified from the best dilate by one solution taken from
+		// http://ostermiller.org/dilate_and_erode.html
+		for (int i = 1; i < height - 1; i++) {
+			for (int j = 1; j < width - 1; j++) {
+				final int index = i * width + j;
+				if (data[index] > bgVal) {
+					if (data[(i - 1) * width + j] == bgVal || data[(i) * width + j -
+						1] == bgVal || data[(i + 1) * width + j] == bgVal || data[(i) *
+							width + j + 1] == bgVal)
+					{
+						// Erode the pixel if any of the neighborhood pixels is background
+						data[index] = (byte) (bgVal - (byte) 1);
+					}
+				}
+			}
+		}
+		for (int i = 0; i < width * height; i++) {
+			if (data[i] < bgVal) {
+				data[i] = bgVal;
+			}
+		}
+		return data;
+	}
+	
 
 	// TODO Replace while(roi[x + r * cos(theta) ...]) loops with similar methods
 	private double expandRadius(final double[] roi, final double threshold,

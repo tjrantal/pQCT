@@ -156,9 +156,10 @@ public class PqctAnalysis implements PlugIn {
 		// Get parameters for scaling the image and for thresholding
 		final GenericDialog dialog = new GenericDialog("Analysis parameters");
 		final String[] topLabels = { "Flip_horizontal", "Flip_vertical",
-			"No_filtering", "Measurement_tube", "Lasso" };
+			"No_filtering", "Measurement_tube", "Lasso","Trabecular_analysis_visualisation" };
 		final boolean[] defaultTopValues = new boolean[topLabels.length];
 		dialog.addCheckboxGroup(1, topLabels.length, topLabels, defaultTopValues);
+		dialog.addNumericField("Peeling_percentage", 20, 4, 8, null);
 		dialog.addNumericField("Air_threshold", -40, 4, 8, null);
 		dialog.addNumericField("Fat threshold", 40, 4, 8, null);
 		dialog.addNumericField("Muscle_threshold", 40, 4, 8, null);
@@ -166,8 +167,8 @@ public class PqctAnalysis implements PlugIn {
 		dialog.addNumericField("Marrow_threshold", 80, 4, 8, null);
 		dialog.addNumericField("Soft_tissue_threshold", 200.0, 4, 8, null);
 		dialog.addNumericField("Rotation_threshold", 200.0, 4, 8, null);
-		dialog.addNumericField("Area threshold", 550.0, 4, 8, null); // 550.0
-		dialog.addNumericField("bMD threshold", 690.0, 4, 8, null); // 690.0
+		dialog.addNumericField("Area_threshold", 550.0, 4, 8, null); // 550.0
+		dialog.addNumericField("bMD_threshold", 690.0, 4, 8, null); // 690.0
 		dialog.addNumericField("Scaling_coefficient (slope)",
 			calibrationCoefficients[1], 4, 8, null);
 		dialog.addNumericField("Scaling_constant (intercept)",
@@ -221,7 +222,7 @@ public class PqctAnalysis implements PlugIn {
 		for (int i = 0; i < defaultTopValues.length; ++i) {
 			defaultTopValues[i] = dialog.getNextBoolean();
 		}
-		final double[] thresholdsAndScaling = new double[11];
+		final double[] thresholdsAndScaling = new double[12];
 		for (int i = 0; i < thresholdsAndScaling.length; ++i) {
 			thresholdsAndScaling[i] = dialog.getNextNumber();
 		}
@@ -370,10 +371,18 @@ public class PqctAnalysis implements PlugIn {
 		if (details.cOn) {
 			final CorticalAnalysis cortAnalysis = new CorticalAnalysis(
 				(SelectROI) roi);
+			//IJ.log("Printing cortical results");
 			results = printCorticalResults(results, cortAnalysis);
+			//IJ.log("Printed cortical results");
 			if (makeImage && resultImage != null) {
-				resultImage = tintBoneStratec(resultImage, roi.sieve, roi.scaledImage,
-					roi.details.marrowThreshold, cortAnalysis.cortexSieve);
+				if (!roi.details.trAnaOn){
+					resultImage = tintBoneStratec(resultImage, roi.sieve, roi.scaledImage,
+						roi.details.marrowThreshold, cortAnalysis.cortexSieve);
+				}else{
+					//Visualise the peeled sieve used for trabecular bone analysis
+					resultImage = tintBoneStratec(resultImage, cortAnalysis.peeledSieve, roi.scaledImage,
+						roi.details.marrowThreshold, new byte[roi.width*roi.height]);
+				}
 			}
 
 		}
@@ -615,14 +624,18 @@ public class PqctAnalysis implements PlugIn {
 		final CorticalAnalysis cortAnalysis)
 	{
 		final StringBuilder builder = new StringBuilder(results);
+		//IJ.log("Building resultsString");
 		DoubleStream.of(cortAnalysis.maMassD, cortAnalysis.stratecMaMassD,
 			cortAnalysis.marrowDensity, cortAnalysis.marrowArea, cortAnalysis.bMD,
 			cortAnalysis.area, cortAnalysis.CoD, cortAnalysis.CoA, cortAnalysis.sSI,
 			cortAnalysis.sSIMax, cortAnalysis.sSIMin, cortAnalysis.iPo,
 			cortAnalysis.iMax, cortAnalysis.iMin, cortAnalysis.dwIPo,
 			cortAnalysis.dwIMax, cortAnalysis.dwIMin, cortAnalysis.ToD,
-			cortAnalysis.ToA, cortAnalysis.medullaryArea, cortAnalysis.bSId).mapToObj(
+			cortAnalysis.ToA, cortAnalysis.medullaryArea, cortAnalysis.bSId, 
+			cortAnalysis.peeledTrD, cortAnalysis.peeledTrA).mapToObj(
 				Double::toString).forEach(s -> builder.append(s).append("\t"));
+				
+				//IJ.log("Built string "+builder.toString());
 		return builder.toString();
 	}
 
