@@ -139,7 +139,7 @@ public class PqctAnalysis implements PlugIn {
 				calibrationCoefficients[1] /= 1000.0; // 1.495
 			}
 			catch (final NullPointerException npe) {
-				IJ.error(".TYP file not found");
+				IJ.log(".TYP file not found");
 			}
 			catch (final IOException e) {
 				IJ.error(".TYP file could not be read");
@@ -153,6 +153,19 @@ public class PqctAnalysis implements PlugIn {
 			}
 			resolution = Double.valueOf(temp);
 		}
+		
+		String imageName = getInfoProperty(imageInfo, "File Name");
+		if (imageName == null) {
+			if (imp.getImageStackSize() == 1) {
+				imageName = imp.getTitle();
+			}
+			else {
+				imageName = imageInfo.substring(0, imageInfo.indexOf("\n"));
+			}
+			imageInfo += "File Name:" + imageName + "\n";
+		}
+		
+		
 		// Get parameters for scaling the image and for thresholding
 		final GenericDialog dialog = new GenericDialog("Analysis parameters");
 		final String[] topLabels = { "Flip_horizontal", "Flip_vertical",
@@ -213,6 +226,7 @@ public class PqctAnalysis implements PlugIn {
 		dialog.addCheckboxGroup(2, 5, bottomLabels, bottomDefaults);
 
 		dialog.addStringField("Image_save_path", Prefs.getDefaultDirectory(), 40);
+		dialog.addStringField("Image_save_name", imageName, 20);
 		// TODO Change help URL
 		dialog.addHelp("http://bonej.org/densitydistribution");
 		dialog.showDialog();
@@ -238,18 +252,10 @@ public class PqctAnalysis implements PlugIn {
 			bottomDefaults[i] = dialog.getNextBoolean();
 		}
 		final String imageSavePath = dialog.getNextString();
+		final String imageSaveName = dialog.getNextString();	//Get file saveName
 		final ScaledImageData scaledImageData;
 
-		String imageName = getInfoProperty(imageInfo, "File Name");
-		if (imageName == null) {
-			if (imp.getImageStackSize() == 1) {
-				imageName = imp.getTitle();
-			}
-			else {
-				imageName = imageInfo.substring(0, imageInfo.indexOf("\n"));
-			}
-			imageInfo += "File Name:" + imageName + "\n";
-		}
+		
 
 		final short[] tempPointer = (short[]) imp.getProcessor().getPixels();
 		final int[] signedShort = new int[tempPointer.length];
@@ -434,7 +440,7 @@ public class PqctAnalysis implements PlugIn {
 				resultImage = drawScale(resultImage, roi.pixelSpacing);
 			}
 			final FileSaver fSaver = new FileSaver(resultImage);
-			fSaver.saveAsPng(imageSavePath + imageName + ".png");
+			fSaver.saveAsPng(imageSavePath + imageSaveName + ".png");
 		}
 		textPanel.appendLine(results);
 		textPanel.updateDisplay();
