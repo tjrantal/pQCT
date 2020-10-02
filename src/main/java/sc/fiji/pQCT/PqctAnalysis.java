@@ -299,6 +299,7 @@ public class PqctAnalysis implements PlugIn {
 			details.flipHorizontal, details.flipVertical, details.noFiltering);
 		RoiSelector roi = null;
 		RoiSelector softRoi = null;
+		
 
 		try {
 			if (details.cOn || details.mOn || details.conOn || details.dOn) {
@@ -594,7 +595,8 @@ public class PqctAnalysis implements PlugIn {
 	private static ImagePlus getRGBResultImage(final double[] values,
 		final int width, final int height, final String path)
 	{
-		final ImagePlus tempImage = new ImagePlus(path + "Visual results");
+		final ImagePlus tempImage = new ImagePlus();
+		tempImage.setTitle(path + "Visual results");
 		tempImage.setProcessor(new FloatProcessor(width, height, values));
 		new ImageConverter(tempImage).convertToRGB();
 		return tempImage;
