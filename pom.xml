@@ -96,6 +96,8 @@
         <system>Travis CI</system>
         <url>https://travis-ci.org/fiji/pQCT</url>
     </ciManagement>
+	
+	
 
     <dependencies>
         <!-- ImageJ dependencies -->
@@ -104,15 +106,18 @@
             <artifactId>ij</artifactId>
         </dependency>
 		<!-- Throws UnsupportedDataTypeException-->
+		<!--
 		<dependency>
 			<groupId>com.sun.activation</groupId>
 			<artifactId>javax.activation</artifactId>
 			<version>1.2.0</version>
 		</dependency>
+		-->
     </dependencies>
 
     <properties>
         <license.licenseName>BSD-2-Clause</license.licenseName>
         <license.copyrightOwners>Timo Rantalainen</license.copyrightOwners>
+		<!--<maven.compiler.release>8</maven.compiler.release>-->
     </properties>
 </project>
