@@ -97,7 +97,7 @@ public class ScaledImageData {
 		}
 	}
 
-	private double[] medianFilter(final double[] data, final int width,
+	public double[] medianFilter(final double[] data, final int width,
 		final int height, final int filterSize)
 	{
 		// Fill filtered with min value to get the frame from messing up with edge
