@@ -137,7 +137,7 @@ public class ResultsWriter {
 				"Stratec CoA [mm2]", "sSI [mm3]", "SSImax [mm3]", "SSImin [mm3]",
 				"iPo [mm4]", "Imax [mm4]", "Imin [mm4]", "dwIPo [mg/cm]",
 				"dwImax [mg/cm]", "dwImin [mg/cm]", "ToD [mg/cm3]", "ToA[mm2]",
-		"medullaryArea [mm2]", "bSId[g/cm4]","Peeled TrD [mg/cm3]","Peeled TrA [mm2]"));
+		"medullaryArea [mm2]", "bSId[g/cm4]","Peeled TrD [mg/cm3]","Peeled TrA [mm2]","TrD [mg/cm3]","TrA [mm2]"));
 		}
 		if (details.mOn) {
 			for (int i = 0; i < (360 / details.sectorWidth); ++i) {

@@ -640,7 +640,7 @@ public class PqctAnalysis implements PlugIn {
 			cortAnalysis.iMax, cortAnalysis.iMin, cortAnalysis.dwIPo,
 			cortAnalysis.dwIMax, cortAnalysis.dwIMin, cortAnalysis.ToD,
 			cortAnalysis.ToA, cortAnalysis.medullaryArea, cortAnalysis.bSId, 
-			cortAnalysis.peeledTrD, cortAnalysis.peeledTrA).mapToObj(
+			cortAnalysis.peeledTrD, cortAnalysis.peeledTrA,cortAnalysis.TrD, cortAnalysis.TrA).mapToObj(
 				Double::toString).forEach(s -> builder.append(s).append("\t"));
 				
 				//IJ.log("Built string "+builder.toString());

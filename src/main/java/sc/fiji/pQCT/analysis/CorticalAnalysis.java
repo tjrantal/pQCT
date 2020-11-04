@@ -60,6 +60,8 @@ public class CorticalAnalysis {
 	public double marrowDensity;
 	public double ToA;
 	public double ToD;
+	public double TrA;	//Trabecular area, pixels within ToA less than BMD threshold and above soft-tissue threshold
+	public double TrD;	//Trabecular density, mean vBMD of TrA pixels
 	public double sSI;
 	// Stratec/Geanie compatible CoD and CoA
 	public byte[] cortexSieve;
@@ -72,6 +74,8 @@ public class CorticalAnalysis {
 	public CorticalAnalysis(final SelectROI roi) {
 		ToA = 0;
 		ToD = 0;
+		TrA = 0;
+		TrD = 0;
 		marrowArea = 0;
 		marrowDensity = 0;
 		final int iterations = roi.width * roi.height;
@@ -87,11 +91,20 @@ public class CorticalAnalysis {
 				marrowArea++;
 				marrowDensity += value;
 			}
+			
+			// Trabecular analysis
+			if (value >= roi.details.softThreshold && value < roi.details.bMDThreshold) {
+				TrA++;
+				TrD += value;
+			}
+			
 		}
 		ToD /= ToA;
+		TrD /= TrA;
 		final double spacingSq = roi.pixelSpacing * roi.pixelSpacing;
 		final double boneAreaPixels = ToA;
 		ToA *= spacingSq;
+		TrA *= spacingSq;
 		marrowDensity /= marrowArea;
 		marrowArea *= spacingSq;
 		
