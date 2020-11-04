@@ -124,4 +124,38 @@ public class ScaledImageData {
 		}
 		return filtered;
 	}
+	
+	public double[] sobel(){
+		return sobel(scaledImage,width,height);
+	}
+	
+	public static double[] sobel(final double[] data, final int width, final int height){
+		double[] output1 = convolve(data,new double[][]{{1,0,-1},{2,0,-2},{1,0,-1}},width,height);
+		double[] output2 = convolve(data,new double[][]{{1,2,1},{0,0,0},{-1,-2,-1}},width,height);
+		double[] output3 = convolve(data,new double[][]{{2,1,0},{1,0,-1},{0,-1,-2}},width,height);
+		double[] output4 = convolve(data,new double[][]{{0,1,2},{-1,0,1},{-2,-1,0}},width,height);
+		double[] output = new double[width*height];
+		for (int i = 0; i<width*height; ++i){
+			output[i] = Math.sqrt(Math.pow(output1[i],2)+Math.pow(output2[i],2));
+			//output[i] = Math.sqrt(Math.pow(output1[i],2)+Math.pow(output2[i],2)+Math.pow(output3[i],2)+Math.pow(output4[i],2));
+		}
+		return output;
+	}
+	
+	private static double[] convolve( double[] data,double[][] kernel, final int width, final int height){
+		double[] output = new double[width*height];
+		int halfKernelWidth = (int) Math.floor(kernel[0].length/2);
+		int halfKernelHeight = (int) Math.floor(kernel.length/2);
+		
+		for (int r = halfKernelHeight; r<height -halfKernelHeight; ++r){
+			for (int c = halfKernelHeight; c<width -halfKernelWidth; ++c){
+				for (int r1 = -halfKernelHeight; r1 <=halfKernelHeight;++r1){
+					for (int c1 = -halfKernelWidth; c1 <=halfKernelWidth;++c1){
+						output[r*width+c] += data[(r+r1)*width+c+c1]*kernel[halfKernelHeight+r1][halfKernelWidth+c1];
+					}
+				}
+			}	
+		}
+		return output;
+	}
 }

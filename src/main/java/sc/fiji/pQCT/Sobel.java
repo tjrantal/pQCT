@@ -64,7 +64,7 @@ import sc.fiji.pQCT.selectroi.SelectSoftROI;
 import sc.fiji.pQCT.selectroi.SelectSoftROILasso;
 import sc.fiji.pQCT.utils.ResultsWriter;
 
-public class PqctAnalysis implements PlugIn {
+public class Sobel implements PlugIn {
 
 	@Override
 	public void run(final String arg) {
@@ -165,100 +165,6 @@ public class PqctAnalysis implements PlugIn {
 			imageInfo += "File Name:" + imageName + "\n";
 		}
 		
-		
-		// Get parameters for scaling the image and for thresholding
-		final GenericDialog dialog = new GenericDialog("Analysis parameters");
-		final String[] topLabels = { "Flip_horizontal", "Flip_vertical",
-			"No_filtering", "Measurement_tube", "Lasso","Trabecular_analysis_visualisation","Maximum_gradient_tracking" };
-		final boolean[] defaultTopValues = new boolean[topLabels.length];
-		dialog.addCheckboxGroup(2,(int)  Math.ceil(((double) topLabels.length)/2d), topLabels, defaultTopValues);
-		dialog.addNumericField("Peeling_percentage", 20, 4, 8, null);
-		dialog.	addToSameRow();
-		dialog.addNumericField("Air_threshold", -40, 4, 8, null);
-		dialog.addNumericField("Fat threshold", 40, 4, 8, null);
-		dialog.	addToSameRow();
-		dialog.addNumericField("Muscle_threshold", 40, 4, 8, null);
-		dialog.addNumericField("Edge_divisions", 45, 4, 8, null);
-		dialog.	addToSameRow();
-		dialog.addNumericField("Marrow_threshold", 80, 4, 8, null);
-		dialog.addNumericField("Soft_tissue_threshold", 200.0, 4, 8, null);
-		dialog.	addToSameRow();
-		dialog.addNumericField("Rotation_threshold", 200.0, 4, 8, null);
-		dialog.addNumericField("Area_threshold", 550.0, 4, 8, null); // 550.0
-		dialog.	addToSameRow();
-		dialog.addNumericField("bMD_threshold", 690.0, 4, 8, null); // 690.0
-		dialog.addNumericField("Scaling_coefficient (slope)", calibrationCoefficients[1], 4, 8, null);
-			dialog.	addToSameRow();
-		dialog.addNumericField("Scaling_constant (intercept)", calibrationCoefficients[0], 4, 8, null);
-
-		// Get ROI selection
-		final String[] choiceLabels = { "Bigger", "Smaller", "Left", "Right", "Top",
-			"Bottom", "Central", "Peripheral", "SecondLargest", "TwoLargestLeft",
-			"TwoLargestRight", "FirstFromLeft", "SecondFromLeft", "ThirdFromLeft",
-			"FourthFromLeft", "FifthFromLeft", "FirstFromTop", "SecondFromTop",
-			"ThirdFromTop", "FourthFromTop", "FifthFromTop" };
-		dialog.addChoice("Roi_selection", choiceLabels, choiceLabels[0]);
-		dialog.	addToSameRow();
-		dialog.addChoice("Soft_Tissue_Roi_selection", choiceLabels,
-			choiceLabels[0]);
-		final String[] rotationLabels = { "According_to_Imax/Imin",
-			"Furthest_point", "All_Bones_Imax/Imin", "Not_selected_to_right",
-			"Selected_to_right" };
-		dialog.	addToSameRow();
-		dialog.addChoice("Rotation_selection", rotationLabels, rotationLabels[0]); // "According_to_Imax/Imin"
-
-		final String[] middleLabels = { "Analyse_cortical_results",
-			"Analyse_mass_distribution", "Analyse_concentric_density_distribution",
-			"Analyse_density_distribution", "Analyse_soft_tissues",
-			"Prevent_peeling_PVE_pixels", "Allow_cleaving", "Suppress_result_image",
-			"Limit_ROI_search_to_manually_selected",
-			"Set_distribution_results_rotation_manually" };
-		final boolean[] middleDefaults = new boolean[10];
-		middleDefaults[3] = true;
-		dialog.addCheckboxGroup(4, 3, middleLabels, middleDefaults);
-
-		dialog.addNumericField("Manual_rotation_[+-_180_deg]", 0.0, 4, 8, null);
-
-		final String[] bottomLabels = new String[8];
-		final boolean[] bottomDefaults = new boolean[8];
-		bottomLabels[0] = "Guess_flip";
-		bottomLabels[1] = "Guess_right";
-		bottomLabels[2] = "Guess_larger";
-		bottomLabels[3] = "Stacked_bones";
-		bottomLabels[4] = "Guess_stacked";
-		bottomLabels[5] = "Invert_flip_guess";
-		bottomLabels[6] = "Flip_distribution_results";
-		bottomLabels[7] = "Save_visual_result_image_on_disk";
-		dialog.addCheckboxGroup(2, 5, bottomLabels, bottomDefaults);
-
-		dialog.addStringField("Image_save_path", Prefs.getDefaultDirectory(), 40);
-		dialog.addStringField("Image_save_name", imageName, 20);
-		// TODO Change help URL
-		dialog.addHelp("http://bonej.org/densitydistribution");
-		dialog.showDialog();
-		if (!dialog.wasOKed()) {
-			return;
-		}
-		for (int i = 0; i < defaultTopValues.length; ++i) {
-			defaultTopValues[i] = dialog.getNextBoolean();
-		}
-		final double[] thresholdsAndScaling = new double[12];
-		for (int i = 0; i < thresholdsAndScaling.length; ++i) {
-			thresholdsAndScaling[i] = dialog.getNextNumber();
-		}
-		final String[] alignmentStrings = new String[3];
-		for (int i = 0; i < alignmentStrings.length; ++i) {
-			alignmentStrings[i] = dialog.getNextChoice();
-		}
-		for (int i = 0; i < middleDefaults.length; ++i) {
-			middleDefaults[i] = dialog.getNextBoolean();
-		}
-		final double manualAlpha = dialog.getNextNumber() * Math.PI / 180.0;
-		for (int i = 0; i < bottomDefaults.length; ++i) {
-			bottomDefaults[i] = dialog.getNextBoolean();
-		}
-		final String imageSavePath = dialog.getNextString();
-		final String imageSaveName = dialog.getNextString();	//Get file saveName
 		final ScaledImageData scaledImageData;
 
 		
@@ -295,162 +201,31 @@ public class PqctAnalysis implements PlugIn {
 				}
 			}
 		}
-		final ImageAndAnalysisDetails details = new ImageAndAnalysisDetails(
-			defaultTopValues, thresholdsAndScaling, alignmentStrings, choiceLabels,
-			rotationLabels, middleDefaults, manualAlpha, bottomDefaults,
-			sectorsAndDivisions);
+
 		// Scale and 3x3 median filter the data
 		scaledImageData = new ScaledImageData(signedShort, imp.getWidth(), imp
-			.getHeight(), resolution, details.scalingFactor, details.constant,
-			details.flipHorizontal, details.flipVertical, details.noFiltering);
-		RoiSelector roi = null;
-		RoiSelector softRoi = null;
+			.getHeight(), resolution, calibrationCoefficients[1], calibrationCoefficients[0],
+			false, false, true);
 		
+		//Apply 5 x 5 median filter twice - Blew et al data treatment
+		double[] sobelFiltered = scaledImageData.sobel(scaledImageData.scaledImage, scaledImageData.width,scaledImageData.height);
+		double[] sobelThreshold = new double[sobelFiltered.length];
+		for (int i = 0; i<sobelFiltered.length;++i){
+			sobelThreshold[i] = scaledImageData.scaledImage[i]*sobelFiltered[i];
+		}
+		double[] doubleSobel = scaledImageData.sobel(sobelFiltered, scaledImageData.width,scaledImageData.height);
 
-		try {
-			if (details.cOn || details.mOn || details.conOn || details.dOn) {
-				roi = new SelectROI(scaledImageData, details, imp,
-					details.boneThreshold, true);
-			}
-			if (details.stOn) {
-				// An ROI appears on the image every now and then, haven't figured out
-				// why -> remove any unwanted rois prior to soft-tissue analysis
-				if (removeROIs == 1){
-					imp.setRoi(null, false);
-				}
-				if (details.lassoOn){
-					softRoi = new SelectSoftROILasso(scaledImageData, details,imp);
-				}else{
-					softRoi = new SelectSoftROI(scaledImageData, details, imp);
-				}
-				if (roi == null) {
-					roi = softRoi;
-				}
-			}
-		}
-		catch (final ExecutionException err) {
-			IJ.log("Caught sieve error " + err.toString());
-			return;
-		}
+		ImagePlus resultImage = resultImage = getRGBResultImage(sobelFiltered, scaledImageData.width, scaledImageData.height,
+			"TestSobel");
+		resultImage.setTitle(imp.getTitle() + "-sobel");
+		resultImage.show();
 
-		if (roi == null) {
-			IJ.log("No analysis was selected.");
-			return;
-		}
-		boolean alphaOn = false;
-		DetermineAlpha determineAlpha = null;
-		if (details.cOn || details.mOn || details.conOn || details.dOn) {
-			determineAlpha = new DetermineAlpha((SelectROI) roi, details);
-			alphaOn = true;
-		}
+		ImagePlus resultImage1 = getRGBResultImage(sobelThreshold, scaledImageData.width, scaledImageData.height,
+			"sobelThreshold");
+		resultImage1.setTitle(imp.getTitle() + "-sobelThreshold");
+		resultImage1.show();
 
-		details.flipDistribution = roi.details.flipDistribution;
-		details.stacked = roi.details.stacked;
-
-		TextPanel textPanel = IJ.getTextPanel();
-		if (textPanel == null) {
-			textPanel = new TextPanel();
-		}
-		final ResultsWriter resultsWriter = new ResultsWriter(imageInfo, alphaOn);
-
-		if (textPanel.getLineCount() == 0) {
-			resultsWriter.writeHeader(textPanel, details);
-		}
-
-		String results = "";
-		results = resultsWriter.printResults(results, details, imp);
-		if (determineAlpha != null) {
-			results = printAlpha(results, determineAlpha);
-		}
-
-		ImagePlus resultImage = null;
-		boolean makeImage = true;
-		if (details.suppressImages && !details.saveImageOnDisk && roi != null) {
-			makeImage = false;
-		}
-		else {
-			resultImage = getRGBResultImage(roi.scaledImage, roi.width, roi.height,
-				imageSavePath);
-			resultImage.setTitle(imp.getTitle() + "-result");
-		}
-		if (details.stOn) {
-			final SoftTissueAnalysis softTissueAnalysis = new SoftTissueAnalysis(
-				(RoiSelector) softRoi);
-			results = printSoftTissueResults(results, softTissueAnalysis);
-			if (makeImage && resultImage != null) {
-				resultImage = tintSoftTissue(resultImage, softRoi.softSieve);
-			}
-		}
-		if (details.cOn) {
-			final CorticalAnalysis cortAnalysis = new CorticalAnalysis(
-				(SelectROI) roi);
-			//IJ.log("Printing cortical results");
-			results = printCorticalResults(results, cortAnalysis);
-			//IJ.log("Printed cortical results");
-			if (makeImage && resultImage != null) {
-				if (!roi.details.trAnaOn){
-					resultImage = tintBoneStratec(resultImage, roi.sieve, roi.scaledImage,
-						roi.details.marrowThreshold, cortAnalysis.cortexSieve);
-				}else{
-					//Visualise the peeled sieve used for trabecular bone analysis
-					resultImage = tintBoneStratec(resultImage, cortAnalysis.peeledSieve, roi.scaledImage,
-						roi.details.marrowThreshold, new byte[roi.width*roi.height]);
-				}
-			}
-
-		}
-		if (details.mOn) {
-			final MassDistribution massDistribution = new MassDistribution(
-				(SelectROI) roi, details, determineAlpha);
-			results = printMassDistributionResults(results, massDistribution,
-				details);
-		}
-		if (details.conOn) {
-			final ConcentricRingAnalysis concentricRingAnalysis =
-				new ConcentricRingAnalysis((SelectROI) roi, details, determineAlpha);
-			results = printConcentricRingResults(results, concentricRingAnalysis,
-				details);
-			if (!details.dOn && makeImage && resultImage != null) {
-				resultImage = drawPeriRadii(resultImage,
-					concentricRingAnalysis.boneCenter, determineAlpha.pindColor,
-					concentricRingAnalysis.rU, concentricRingAnalysis.theta);
-				resultImage = drawMarrowCenter(resultImage, determineAlpha.alpha /
-					Math.PI * 180.0, concentricRingAnalysis.boneCenter);
-			}
-		}
-
-		if (details.dOn) {
-			final DistributionAnalysis distributionAnalysis =
-				new DistributionAnalysis((SelectROI) roi, details, determineAlpha);
-			results = printDistributionResults(results, distributionAnalysis,
-				details);
-			if (makeImage && resultImage != null) {
-				resultImage = drawRadii(resultImage, distributionAnalysis.marrowCenter,
-					determineAlpha.pindColor, distributionAnalysis.r,
-					distributionAnalysis.r2, distributionAnalysis.theta);
-				resultImage = drawMarrowCenter(resultImage, determineAlpha.alpha /
-					Math.PI * 180.0, distributionAnalysis.marrowCenter);
-			}
-		}
-
-		if ((details.dOn || details.conOn) && makeImage && resultImage != null) {
-			resultImage = drawRotated(resultImage, determineAlpha.alpha / Math.PI *
-				180.0);
-		}
-
-		if (!details.suppressImages && resultImage != null) {
-			resultImage = drawScale(resultImage, roi.pixelSpacing);
-			resultImage.show();
-		}
-		if (details.saveImageOnDisk && resultImage != null) {
-			if (details.suppressImages) {
-				resultImage = drawScale(resultImage, roi.pixelSpacing);
-			}
-			final FileSaver fSaver = new FileSaver(resultImage);
-			fSaver.saveAsPng(imageSavePath + imageSaveName + ".png");
-		}
-		textPanel.appendLine(results);
-		textPanel.updateDisplay();
+		
 	}
 
 	public static String getInfoProperty(final String properties,

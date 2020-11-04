@@ -77,7 +77,7 @@ public class SelectROI extends RoiSelector {
 				}
 			}
 		}
-		final Vector<Object> boneMasks = getSieve(tempScaledImage, boneThreshold,
+		final Vector<Object> boneMasks = getSieve(tempScaledImage, boneThreshold,details.grTrackOn,
 			details.roiChoice, details.guessStacked, details.stacked,
 			details.guessFlip, details.allowCleaving);
 		sieve = (byte[]) boneMasks.get(0);

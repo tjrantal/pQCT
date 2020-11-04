@@ -36,6 +36,7 @@ public class ImageAndAnalysisDetails {
 	public final boolean sleeveOn;
 	public boolean lassoOn;
 	public boolean trAnaOn;
+	public boolean grTrackOn;	//Use gradient tracking rather than threshold countour for object segmentation
 	public final double scalingFactor;
 	public final double constant;
 
@@ -95,6 +96,7 @@ public class ImageAndAnalysisDetails {
 		sleeveOn = defaultTopValues[3];
 		lassoOn = defaultTopValues[4];
 		trAnaOn = defaultTopValues[5];
+		grTrackOn = defaultTopValues[6];
 
 		peelingPercentage = thresholdsAndScaling[0];
 		airThreshold = thresholdsAndScaling[1];

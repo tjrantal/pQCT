@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 
+import ij.IJ;
 import ij.ImagePlus;
 import sc.fiji.pQCT.io.ImageAndAnalysisDetails;
 import sc.fiji.pQCT.io.ScaledImageData;
@@ -447,7 +448,7 @@ public abstract class RoiSelector {
 
 	// DetectEdge
 	private Vector<Object> findEdge(final double[] scaledImage,
-		final double threshold, final boolean allowCleaving)
+		final double threshold, final boolean allowCleaving, final boolean grTrack)
 	{
 		int i = 0;
 		int j = 0;
@@ -484,9 +485,13 @@ public abstract class RoiSelector {
 			}
 			result[i + j * width] = 1;
 
-			// Tracing algorithm DetectedEdge
-			final Vector<Object> returned = traceEdge(scaledImage, result, threshold,
-				i, j);
+			// Tracing algorithm 
+			Vector<Object> returned = null;
+			if (!grTrack){
+				returned = traceEdge(scaledImage, result, threshold, i, j); //Contour tracing
+			}else{
+				returned = traceGradient(scaledImage, result, threshold, i, j); //Contour tracing		
+			}
 			result = (byte[]) returned.get(0);
 			final Vector<Integer> newIit = (Vector<Integer>) returned.get(1);
 			final Vector<Integer> newJiit = (Vector<Integer>) returned.get(2);
@@ -842,6 +847,102 @@ public abstract class RoiSelector {
 		final int tempSelection = selectRoiRightmostBone(tempEdges);
 		return twoBones[tempSelection];
 	}
+	
+	/* Combined gradient and contour tracing 
+		trace edge by advancing according to the previous direction
+		progress into the local maximum
+		TEST WITH 20940.M01
+		@i = column
+		@j = row
+	*/
+	private Vector<Object> traceGradient(final double[] scaledImage,
+		final byte[] result, final double threshold, int i, int j)
+	{
+		double[] sobel = ScaledImageData.sobel(scaledImage,width,height);	//Get the gradient image for tracing
+		double[] toTrace = new double[scaledImage.length];	//Combine gradient and intensity information to stay on gray scale if gradient disappears?
+		for (int ii = 0;ii<toTrace.length;++ii){
+			toTrace[ii] = scaledImage[ii]*sobel[ii];
+		}
+		
+		final Collection<Integer> iit = new Vector<>();
+		final Collection<Integer> jiit = new Vector<>();
+		iit.add(i);
+		jiit.add(j);
+		// begin by advancing right. Positive angles rotate the direction clockwise.
+		double direction = 0;
+		final int initI;
+		final int initJ;
+		initI = i;
+		initJ = j;
+		double[] weights = new double[]{1,0.9,0.9,0.8,0.8,0.7,0.7};
+		double[] directions = new double[]{0,-Math.PI / 4d,Math.PI / 4d,-Math.PI*2d / 4d,Math.PI*2d / 4d,-Math.PI*3d / 4d,Math.PI*3d / 4d};
+		double[] values = new double[directions.length];
+		
+		while (true) {
+			int counter = 0;
+			IJ.log(String.format("I %d J %d",i,j));
+			//Get the local maximum of the five pixels in the direction of travel
+			int[][] toCheck = new int[][]{
+											{(int) Math.round(Math.cos(direction+directions[0])),(int) Math.round(Math.sin(direction+directions[0]))},	//Straight ahead
+											{(int) Math.round(Math.cos(direction+directions[1])),(int) Math.round(Math.sin(direction+directions[1]))},	//45 left
+											{(int) Math.round(Math.cos(direction+directions[2])),(int) Math.round(Math.sin(direction+directions[2]))},	//45 right
+											{(int) Math.round(Math.cos(direction+directions[3])),(int) Math.round(Math.sin(direction+directions[3]))},	//90 left
+											{(int) Math.round(Math.cos(direction+directions[4])),(int) Math.round(Math.sin(direction+directions[4]))},	//90 right
+											{(int) Math.round(Math.cos(direction+directions[5])),(int) Math.round(Math.sin(direction+directions[5]))},	//135 left
+											{(int) Math.round(Math.cos(direction+directions[6])),(int) Math.round(Math.sin(direction+directions[6]))}	//135 right
+											};
+			for (int t = 0; t<toCheck.length;++t){
+				values[t] = i+toCheck[t][0] < width & i+toCheck[t][0] > -1 &
+							j+toCheck[t][1] < height & j+toCheck[t][1] > -1 ? toTrace[i+toCheck[t][0]+(j+toCheck[t][1])*width]*weights[t] : 0;
+				
+			}
+
+			int selectInd = maxIndex(values);
+			
+			direction +=directions[selectInd];
+			i += (int) Math.round(Math.cos(direction));
+			j += (int) Math.round(Math.sin(direction));
+			if ((i == initI && j == initJ) || counter > 7 | result[i + j * width] == 1 || result[i + j *
+					width] > 3)
+			{
+				for (int ii = 0; ii < result.length; ++ii) {
+					if (result[ii] > 1) {
+						result[ii] = 1;
+					}
+				}
+				final Vector<Object> returnVector = new Vector<>();
+				returnVector.add(result);
+				returnVector.add(iit);
+				returnVector.add(jiit);
+				return returnVector;
+			}
+			else {
+				if (result[i + j * width] == 0) {
+					result[i + j * width] = 2;
+				}
+				else if (result[i + j * width] != 1) {
+					result[i + j * width]++;
+				}
+				iit.add(i);
+				jiit.add(j);
+
+			}
+		}
+		
+		
+	}
+	
+	private int maxIndex(double[] a){
+		int b = 0;
+		double maxVal = Double.NEGATIVE_INFINITY;
+		for (int i = 0;i<a.length;++i){
+			if (a[i] > maxVal){
+				maxVal = a[i];
+				b = i;
+			}			
+		}
+		return b;
+	}
 
 	/*	Edge Tracing DetectedEdge
 	trace edge by advancing according to the previous direction
@@ -1094,13 +1195,13 @@ public abstract class RoiSelector {
 
 	// DetectedEdges
 	Vector<Object> getSieve(final double[] tempScaledImage,
-		final double boneThreshold, final String roiChoice,
+		final double boneThreshold,final boolean grTrack, final String roiChoice,
 		final boolean guessStacked, final boolean stacked, final boolean guessFlip,
 		final boolean allowCleaving) throws ExecutionException
 	{
 		// Trace bone edges
-		final Vector<?> results = findEdge(tempScaledImage, boneThreshold,
-			allowCleaving);
+		Vector<?> results = findEdge(tempScaledImage, boneThreshold,allowCleaving,grTrack);	//Object tracing
+		
 		result = (byte[]) results.get(0);
 		@SuppressWarnings("unchecked")
 		final List<DetectedEdge> edges = (Vector<DetectedEdge>) results.get(1);
