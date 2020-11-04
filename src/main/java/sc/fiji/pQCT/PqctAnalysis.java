@@ -171,21 +171,25 @@ public class PqctAnalysis implements PlugIn {
 		final String[] topLabels = { "Flip_horizontal", "Flip_vertical",
 			"No_filtering", "Measurement_tube", "Lasso","Trabecular_analysis_visualisation" };
 		final boolean[] defaultTopValues = new boolean[topLabels.length];
-		dialog.addCheckboxGroup(1, topLabels.length, topLabels, defaultTopValues);
+		dialog.addCheckboxGroup(2,(int)  Math.ceil(((double) topLabels.length)/2d), topLabels, defaultTopValues);
 		dialog.addNumericField("Peeling_percentage", 20, 4, 8, null);
+		dialog.	addToSameRow();
 		dialog.addNumericField("Air_threshold", -40, 4, 8, null);
 		dialog.addNumericField("Fat threshold", 40, 4, 8, null);
+		dialog.	addToSameRow();
 		dialog.addNumericField("Muscle_threshold", 40, 4, 8, null);
 		dialog.addNumericField("Edge_divisions", 45, 4, 8, null);
+		dialog.	addToSameRow();
 		dialog.addNumericField("Marrow_threshold", 80, 4, 8, null);
 		dialog.addNumericField("Soft_tissue_threshold", 200.0, 4, 8, null);
+		dialog.	addToSameRow();
 		dialog.addNumericField("Rotation_threshold", 200.0, 4, 8, null);
 		dialog.addNumericField("Area_threshold", 550.0, 4, 8, null); // 550.0
+		dialog.	addToSameRow();
 		dialog.addNumericField("bMD_threshold", 690.0, 4, 8, null); // 690.0
-		dialog.addNumericField("Scaling_coefficient (slope)",
-			calibrationCoefficients[1], 4, 8, null);
-		dialog.addNumericField("Scaling_constant (intercept)",
-			calibrationCoefficients[0], 4, 8, null);
+		dialog.addNumericField("Scaling_coefficient (slope)", calibrationCoefficients[1], 4, 8, null);
+			dialog.	addToSameRow();
+		dialog.addNumericField("Scaling_constant (intercept)", calibrationCoefficients[0], 4, 8, null);
 
 		// Get ROI selection
 		final String[] choiceLabels = { "Bigger", "Smaller", "Left", "Right", "Top",
@@ -194,11 +198,13 @@ public class PqctAnalysis implements PlugIn {
 			"FourthFromLeft", "FifthFromLeft", "FirstFromTop", "SecondFromTop",
 			"ThirdFromTop", "FourthFromTop", "FifthFromTop" };
 		dialog.addChoice("Roi_selection", choiceLabels, choiceLabels[0]);
+		dialog.	addToSameRow();
 		dialog.addChoice("Soft_Tissue_Roi_selection", choiceLabels,
 			choiceLabels[0]);
 		final String[] rotationLabels = { "According_to_Imax/Imin",
 			"Furthest_point", "All_Bones_Imax/Imin", "Not_selected_to_right",
 			"Selected_to_right" };
+		dialog.	addToSameRow();
 		dialog.addChoice("Rotation_selection", rotationLabels, rotationLabels[0]); // "According_to_Imax/Imin"
 
 		final String[] middleLabels = { "Analyse_cortical_results",
