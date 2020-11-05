@@ -52,7 +52,7 @@ public class ResultsWriter {
 		final String[] propertyNames = { "File Name", "Patient's Name",
 			"Patient ID", "Patient's Birth Date", "Acquisition Date", "Pixel Spacing",
 			"ObjLen" };
-		final String[] parameters = Stream.of(details.peelingPercentage,details.airThreshold,
+		final String[] parameters = Stream.of(details.grTrackOn,details.peelingPercentage,details.airThreshold,
 			details.fatThreshold, details.muscleThreshold, details.edgeDivisions, details.marrowThreshold,
 			details.softThreshold, details.rotationThreshold, details.areaThreshold,
 			details.bMDThreshold, details.scalingFactor, details.constant).map(
@@ -108,7 +108,7 @@ public class ResultsWriter {
 	{
 		final StringBuilder headings = new StringBuilder(String.join("\t",
 			"File Name", "Patient's Name", "Patient ID", "Patient's Birth Date",
-			"Acquisition Date", "Pixel Spacing", "Object Length", "Peeling percentage", "Air Threshold",
+			"Acquisition Date", "Pixel Spacing", "Object Length","Gradient tracing", "Peeling percentage", "Air Threshold",
 			"Fat Threshold", "Muscle Threshold", "Edge Divisions", "Marrow Threshold", "Soft Threshold",
 			"Rotation Threshold", "Area Threshold", "bMD Threshold",
 			"Scaling Coefficient", "Scaling Constant","Lasso","Trabecular Visualisation", "Manual Rotation",

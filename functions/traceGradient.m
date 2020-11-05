@@ -1,12 +1,11 @@
+%Allow gaps in the contour being traced. Calculate three alternative
+%routes, pick the one with the lowest cost. Lowest cost comprises least
+%diversion from the initial direction
+
 function [result, iit, jiit] = traceGradient(scaledImage,width,height, result, threshold, i, j)
-		global toTrace
-% 		figure
-% 		imshow(toTrace,[]);
-% 		
-% 		keyboard;
+		global toTrace sobel
 		iit =  [];
         jiit = [];
-        
         iit(end+1) = i;
         jiit(end+1) = j;
 
@@ -14,17 +13,12 @@ function [result, iit, jiit] = traceGradient(scaledImage,width,height, result, t
 	    direction = 0;
 		initI = i;
 		initJ = j;
-		weights = [0.7,0.8,0.9,1,0.9,0.8,0.7];
+		weights = [0.2,0.8,1.0,1,0.8,0.5,0.1];
 		directions = [-pi*3 / 4,  -pi*2 / 4, -pi*1 / 4, 0 ,pi*1 / 4, pi*2 / 4, pi*3 / 4];
 
 		values = zeros(length(directions),1);
 		bmds = zeros(length(directions),1);
-
 		while (1) 
-			
-			
-			
-			
 % 			//Get the values of the pixels in the direction of travel
 			toCheck = {						[round(cos(direction+directions(1))),round(sin(direction+directions(1)))], ...	
 											[round(cos(direction+directions(2))),round(sin(direction+directions(2)))], ...	
@@ -44,14 +38,16 @@ function [result, iit, jiit] = traceGradient(scaledImage,width,height, result, t
                 tempJ = j +toCheck{t}(2);
                 if  tempI <= width && tempI > 0 && ...
                     tempJ <= height && tempJ > 0
-                    values(t) = toTrace(tempJ,tempI)*weights(t);
+%                     values(t) = toTrace(tempJ,tempI)*weights(t);
+                    values(t) = sobel(tempJ,tempI)*weights(t);
+                    
                     bmds(t) = scaledImage(tempJ,tempI);
                 else
                     values(t) = 0;
                     bmds(t) = 0;
                 end
                 if t > 1
-					if bmds(t-1) < threshold && bmds(t) >= threshold
+					if 0 && bmds(t-1) < threshold && bmds(t) >= threshold
 % 						//Matching pixel found, keep going along the edge
 						selectInd = t;
 						routeFound = 1;

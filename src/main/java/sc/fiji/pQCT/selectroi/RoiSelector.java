@@ -854,13 +854,9 @@ public abstract class RoiSelector {
 		return twoBones[tempSelection];
 	}
 	
-	/* Combined gradient and contour tracing 
+	/* Gradient tracing 
 		trace edge by advancing according to the previous direction
-		progress into the local maximum
-		
-		Keep tracing with edge-tracing  and look for candidate routes into the direction of travel with max 2 pixel gaps to a valid pixel.
-		
-		TEST WITH 20940.M01
+		progress into the weighted local maximum, counter clockwise direction is weighted
 		@i = column
 		@j = row
 	*/
@@ -868,10 +864,15 @@ public abstract class RoiSelector {
 		final byte[] result, final double threshold, int i, int j)
 	{
 		double[] sobel = ScaledImageData.sobel(scaledImage,width,height);	//Get the gradient image for tracing
+		
+	
+		/*
+		//Considered using a multiplication of the gradient and the image, tunred out not to be a good idea
 		double[] toTrace = new double[scaledImage.length];	//Combine gradient and intensity information to stay on gray scale if gradient disappears?
 		for (int ii = 0;ii<toTrace.length;++ii){
 			toTrace[ii] = scaledImage[ii]*sobel[ii];
 		}
+		*/
 		
 		final Collection<Integer> iit = new Vector<>();
 		final Collection<Integer> jiit = new Vector<>();
@@ -883,7 +884,7 @@ public abstract class RoiSelector {
 		final int initJ;
 		initI = i;
 		initJ = j;
-		double[] weights = new double[]{1,0.9,0.9,0.8,0.8,0.7,0.7};
+		double[] weights = new double[]{0.2,0.8,1.0,1,0.8,0.5,0.1};	//Weight the counter clockwise tracking more heavily
 		double[] directions = new double[]{-Math.PI*3d / 4d,  -Math.PI*2d / 4d, -Math.PI*1d / 4d, 0d ,
 											Math.PI*1d / 4d, Math.PI*2d / 4d, Math.PI*3d / 4d};
 
@@ -912,10 +913,16 @@ public abstract class RoiSelector {
 			for (int t = 0; t<toCheck.length;++t){
 				
 				
+				//values[t] = i+toCheck[t][0] < width & i+toCheck[t][0] > -1 &
+				//			j+toCheck[t][1] < height & j+toCheck[t][1] > -1 ? toTrace[i+toCheck[t][0]+(j+toCheck[t][1])*width]*weights[t] : 0;
+							
 				values[t] = i+toCheck[t][0] < width & i+toCheck[t][0] > -1 &
-							j+toCheck[t][1] < height & j+toCheck[t][1] > -1 ? toTrace[i+toCheck[t][0]+(j+toCheck[t][1])*width]*weights[t] : 0;
+							j+toCheck[t][1] < height & j+toCheck[t][1] > -1 ? sobel[i+toCheck[t][0]+(j+toCheck[t][1])*width]*weights[t] : 0;
+				/*
+				//Debugging, not needed for purely gradient-based tracing
 				bmds[t] = i+toCheck[t][0] < width & i+toCheck[t][0] > -1 &
 							j+toCheck[t][1] < height & j+toCheck[t][1] > -1 ? scaledImage[i+toCheck[t][0]+(j+toCheck[t][1])*width] : 0;
+				
 				if (t > 0){
 					if (bmds[t-1] < threshold & bmds[t] >= threshold){
 						//Matching pixel found, keep going along the edge
@@ -927,17 +934,13 @@ public abstract class RoiSelector {
 					
 					
 				}
+				*/
 							
 			}
 			
 			if (!routeFound){
-				IJ.log("ROUTE NOT FOUND???");
-				selectInd = maxIndex(values);
-				final Vector<Object> returnVector = new Vector<>();
-				returnVector.add(result);
-				returnVector.add(iit);
-				returnVector.add(jiit);
-				return returnVector;
+				//IJ.log("ROUTE NOT FOUND???");
+				selectInd = maxIndex(values);	//Always in use with gradient tracing
 			}
 			direction +=directions[selectInd];
 			i += (int) Math.round(Math.cos(direction));

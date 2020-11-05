@@ -2,7 +2,7 @@ function [edges, result] =  findEdge(scaledImage, width, height, threshold)
 	edges =struct();
 	i = 1;
 	j = 1;
-    global toTrace
+    global toTrace sobel
     temp = scaledImage';
 		sobel = sc.fiji.pQCT.io.ScaledImageData.sobel(temp(:),width,height);	%Get the gradient image for tracing
 		sobel = reshape(sobel,[width,height])';
@@ -31,6 +31,9 @@ function [edges, result] =  findEdge(scaledImage, width, height, threshold)
 
         [result, iit, jiit] = traceGradient(scaledImage,width,height, result, threshold, i, j);
         result = imfill(result,'holes');    %Fill the traced outline
+        result = imdilate(result,[0,1,0;1,1,1;0,1,0]);
+        result = imdilate(result,[0,1,0;1,1,1;0,1,0]);
+        result = imdilate(result,[0,1,0;1,1,1;0,1,0]);
         if ~isfield(edges,'iit')
             edges(1).iit = iit;
         else
@@ -38,17 +41,17 @@ function [edges, result] =  findEdge(scaledImage, width, height, threshold)
         end
         edges(end).jiit = jiit;
         
-%         figure
-%         imshow(scaledImage,[]);
-%         hold on;
-%         plot(i,j,'ro');
-%         hold on;
-%         plot(iit,jiit,'b');
+        figure('position',[800,120,500,500])
+        imshow(sobel,[]);
+        hold on;
+        plot(i,j,'ro');
+        hold on;
+        plot(iit,jiit,'b');
 %          
 %          figure
 %         imshow(result,[]);
 
-%         keyboard;
+        keyboard;
 	end
 
 end
