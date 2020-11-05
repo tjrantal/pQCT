@@ -1,0 +1,72 @@
+function edges =  findEdge(scaledImage, width, height, threshold)
+	edges =struct();
+	i = 1;
+	j = 1;
+
+	result = zeros(height,width);
+	%Scan through the whole image loop
+	while i < width && j < height-1
+		%Look for the next starting point loop
+		while i < width && j < height && scaledImage(j,i) < threshold
+		
+
+			if result(j,i) > 0
+				while j < height && result(j,i) > 0
+					i = i+1;
+					if i == width && j < height - 1
+						i = 1;
+						j = j+1;
+					end
+				end
+			end
+			i = i+1;
+			if i == width
+				j = j+1;
+				if j >= height 
+					break;
+				end
+				i = 1;
+			end
+		end
+		tempI = i;
+		tempJ = j;
+       
+		if  i >= width  && j >= height
+			break; %All done
+        end
+		result(j,i) = 1;
+
+        [result, iit, jiit] = traceGradient(scaledImage,width,height, result, threshold, i, j);
+        result = imfill(result,'holes');    %Fill the traced outline
+        if ~isfield(edges,'iit')
+            edges(1).iit = iit;
+        else
+            edges(end+1).iit = iit;
+        end
+        edges(end).jiit = jiit;
+        
+        figure
+        imshow(scaledImage,[]);
+        hold on;
+        plot(i,j,'ro');
+        hold on;
+        plot(iit,jiit,'b');
+         
+         figure
+        imshow(result,[]);
+
+        keyboard;
+
+% 		// Find next empty spot
+		i = tempI;
+		j = tempJ;
+		while j < height && (scaledImage(j,i) >= threshold || result(j,i) > 0)
+			i = i+1;
+			if (i == width)
+				i = 1;
+				j = j+1;
+            end
+        end
+	end
+
+end

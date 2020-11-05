@@ -446,6 +446,12 @@ public abstract class RoiSelector {
 		return results;
 	}
 
+	//Call without gradient tracking option
+	private Vector<Object> findEdge(final double[] scaledImage,
+		final double threshold, final boolean allowCleaving){
+		return findEdge(scaledImage,threshold, allowCleaving, false);	
+	}
+
 	// DetectEdge
 	private Vector<Object> findEdge(final double[] scaledImage,
 		final double threshold, final boolean allowCleaving, final boolean grTrack)
@@ -851,6 +857,9 @@ public abstract class RoiSelector {
 	/* Combined gradient and contour tracing 
 		trace edge by advancing according to the previous direction
 		progress into the local maximum
+		
+		Keep tracing with edge-tracing  and look for candidate routes into the direction of travel with max 2 pixel gaps to a valid pixel.
+		
 		TEST WITH 20940.M01
 		@i = column
 		@j = row
@@ -875,30 +884,61 @@ public abstract class RoiSelector {
 		initI = i;
 		initJ = j;
 		double[] weights = new double[]{1,0.9,0.9,0.8,0.8,0.7,0.7};
-		double[] directions = new double[]{0,-Math.PI / 4d,Math.PI / 4d,-Math.PI*2d / 4d,Math.PI*2d / 4d,-Math.PI*3d / 4d,Math.PI*3d / 4d};
+		double[] directions = new double[]{-Math.PI*3d / 4d,  -Math.PI*2d / 4d, -Math.PI*1d / 4d, 0d ,
+											Math.PI*1d / 4d, Math.PI*2d / 4d, Math.PI*3d / 4d};
+
 		double[] values = new double[directions.length];
+		double[] bmds = new double[directions.length];
 		
 		while (true) {
 			int counter = 0;
-			IJ.log(String.format("I %d J %d",i,j));
-			//Get the local maximum of the five pixels in the direction of travel
+			
+			
+			
+			//Get the values of the pixels in the direction of travel
 			int[][] toCheck = new int[][]{
-											{(int) Math.round(Math.cos(direction+directions[0])),(int) Math.round(Math.sin(direction+directions[0]))},	//Straight ahead
-											{(int) Math.round(Math.cos(direction+directions[1])),(int) Math.round(Math.sin(direction+directions[1]))},	//45 left
-											{(int) Math.round(Math.cos(direction+directions[2])),(int) Math.round(Math.sin(direction+directions[2]))},	//45 right
-											{(int) Math.round(Math.cos(direction+directions[3])),(int) Math.round(Math.sin(direction+directions[3]))},	//90 left
-											{(int) Math.round(Math.cos(direction+directions[4])),(int) Math.round(Math.sin(direction+directions[4]))},	//90 right
-											{(int) Math.round(Math.cos(direction+directions[5])),(int) Math.round(Math.sin(direction+directions[5]))},	//135 left
-											{(int) Math.round(Math.cos(direction+directions[6])),(int) Math.round(Math.sin(direction+directions[6]))}	//135 right
+											{(int) Math.round(Math.cos(direction+directions[0])),(int) Math.round(Math.sin(direction+directions[0]))},	
+											{(int) Math.round(Math.cos(direction+directions[1])),(int) Math.round(Math.sin(direction+directions[1]))},	
+											{(int) Math.round(Math.cos(direction+directions[2])),(int) Math.round(Math.sin(direction+directions[2]))},	
+											{(int) Math.round(Math.cos(direction+directions[3])),(int) Math.round(Math.sin(direction+directions[3]))},	
+											{(int) Math.round(Math.cos(direction+directions[4])),(int) Math.round(Math.sin(direction+directions[4]))},	
+											{(int) Math.round(Math.cos(direction+directions[5])),(int) Math.round(Math.sin(direction+directions[5]))},	
+											{(int) Math.round(Math.cos(direction+directions[6])),(int) Math.round(Math.sin(direction+directions[6]))}	
 											};
+											
+			// Look for valid boundary pixel. If one is found, ignore the rest
+			boolean routeFound = false;
+			int selectInd = 0;
 			for (int t = 0; t<toCheck.length;++t){
+				
+				
 				values[t] = i+toCheck[t][0] < width & i+toCheck[t][0] > -1 &
 							j+toCheck[t][1] < height & j+toCheck[t][1] > -1 ? toTrace[i+toCheck[t][0]+(j+toCheck[t][1])*width]*weights[t] : 0;
-				
+				bmds[t] = i+toCheck[t][0] < width & i+toCheck[t][0] > -1 &
+							j+toCheck[t][1] < height & j+toCheck[t][1] > -1 ? scaledImage[i+toCheck[t][0]+(j+toCheck[t][1])*width] : 0;
+				if (t > 0){
+					if (bmds[t-1] < threshold & bmds[t] >= threshold){
+						//Matching pixel found, keep going along the edge
+						selectInd = t;
+						routeFound = true;
+						IJ.log(String.format("RouteFound I %d J %d goto %d",i,j,selectInd));
+						break;
+					}
+					
+					
+				}
+							
 			}
-
-			int selectInd = maxIndex(values);
 			
+			if (!routeFound){
+				IJ.log("ROUTE NOT FOUND???");
+				selectInd = maxIndex(values);
+				final Vector<Object> returnVector = new Vector<>();
+				returnVector.add(result);
+				returnVector.add(iit);
+				returnVector.add(jiit);
+				return returnVector;
+			}
 			direction +=directions[selectInd];
 			i += (int) Math.round(Math.cos(direction));
 			j += (int) Math.round(Math.sin(direction));
@@ -1192,6 +1232,15 @@ public abstract class RoiSelector {
 		}
 		return data;
 	}
+
+		// DetectedEdges
+	Vector<Object> getSieve(final double[] tempScaledImage,
+		final double boneThreshold, final String roiChoice,
+		final boolean guessStacked, final boolean stacked, final boolean guessFlip,
+		final boolean allowCleaving) throws ExecutionException{
+			return getSieve(tempScaledImage,boneThreshold,false,roiChoice,guessStacked, stacked, guessFlip,allowCleaving);
+		}
+
 
 	// DetectedEdges
 	Vector<Object> getSieve(final double[] tempScaledImage,
