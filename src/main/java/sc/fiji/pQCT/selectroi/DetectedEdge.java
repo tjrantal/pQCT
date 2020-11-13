@@ -37,7 +37,7 @@ public class DetectedEdge implements Comparable<DetectedEdge> {
 	public final int area;
 	public final int length;
 
-	DetectedEdge(final Vector<Integer> iit, final Vector<Integer> jiit,
+	public DetectedEdge(final Vector<Integer> iit, final Vector<Integer> jiit,
 		final int area)
 	{
 		this.iit = iit;

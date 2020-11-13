@@ -63,6 +63,12 @@ import sc.fiji.pQCT.selectroi.SelectROI;
 import sc.fiji.pQCT.selectroi.SelectSoftROI;
 import sc.fiji.pQCT.selectroi.SelectSoftROILasso;
 import sc.fiji.pQCT.utils.ResultsWriter;
+import sc.fiji.pQCT.selectroi.DetectedEdge;
+
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class BlewMA implements PlugIn {
 
@@ -251,10 +257,59 @@ public class BlewMA implements PlugIn {
 		blewFiltered = scaledImageData.medianFilter(blewFiltered, scaledImageData.width,
 		scaledImageData.height, 5); //Second iteration
 		
-		//Produce and show the two threshold images
-		int lowPixels  = 0;
-		int highPixels = 0;
+		//Search for the two largest objects with segmentation
+		ArrayList<DetectedEdge> lowedges = findEdge(blewFiltered,  scaledImageData.width,
+		scaledImageData.height,	thresholdsAndScaling[0], false, false);
+		ArrayList<DetectedEdge> highedges = findEdge(blewFiltered,  scaledImageData.width,
+		scaledImageData.height,	thresholdsAndScaling[1], false, false);
+		
+		//Fill in templates with the relevant pixels
+		Collections.sort(lowedges);	//Sort in ascending order
+		Collections.sort(highedges);	//Sort in ascending order
+		byte[] lowMask = new byte[scaledImageData.width*scaledImageData.height];
+		byte[] highMask = new byte[scaledImageData.width*scaledImageData.height];
 		byte[] tintSieve = new byte[scaledImageData.width*scaledImageData.height];
+		
+		//Trace the two largest objects (the bones)
+		int lowPixels  = 0;
+		for (int b = lowedges.size()-2; b<lowedges.size();++b){
+			byte[] temp = new byte[scaledImageData.width*scaledImageData.height];
+			for (int i = 0;i<lowedges.get(b).iit.size();++i){
+				temp[lowedges.get(b).iit.get(i)+lowedges.get(b).jiit.get(i)*scaledImageData.width] = 1;
+			}
+			Vector<Object> filled = fillResultEdge(temp, scaledImageData.width, scaledImageData.height,	lowedges.get(b).iit,lowedges.get(b).jiit,blewFiltered, thresholdsAndScaling[0]);
+			temp = (byte[]) filled.get(0);
+			for (int t = 0; t<temp.length;++t){
+				if (temp[t] > 0 && blewFiltered[t] > 70){
+					lowMask[t] = 1;
+					tintSieve[t] = 4;
+					++lowPixels;
+				}
+			}
+			
+		}
+		
+		int highPixels = 0;
+		for (int b = highedges.size()-2; b<lowedges.size();++b){
+			byte[] temp = new byte[scaledImageData.width*scaledImageData.height];
+			for (int i = 0;i<highedges.get(b).iit.size();++i){
+				temp[highedges.get(b).iit.get(i)+highedges.get(b).jiit.get(i)*scaledImageData.width] = 1;
+			}
+			Vector<Object> filled = fillResultEdge(temp, scaledImageData.width, scaledImageData.height,	highedges.get(b).iit,highedges.get(b).jiit,blewFiltered, thresholdsAndScaling[1]);
+			temp = (byte[]) filled.get(0);
+			for (int t = 0; t<temp.length;++t){
+				if (temp[t] > 0 && blewFiltered[t] > 70){
+					highMask[t] = 1;
+					tintSieve[t] = 5;
+					++highPixels;
+				}
+			}
+		
+		}
+		
+		/*
+		//Produce and show the two threshold images
+				
 		for (int i = 0;i<scaledImageData.width*scaledImageData.height; ++i){
 			if (blewFiltered[i] >= thresholdsAndScaling[0]){
 				++lowPixels;
@@ -265,6 +320,7 @@ public class BlewMA implements PlugIn {
 				}
 			}
 		}
+		*/
 		double percentMove = (((double) lowPixels)/((double) highPixels)-1d)*100d;
 		
 
@@ -670,5 +726,339 @@ public class BlewMA implements PlugIn {
 			}
 		}
 		return tempImage;
+	}
+	
+
+	
+	//**Edge tracing*/
+	// DetectEdge
+	private ArrayList<DetectedEdge> findEdge(final double[] scaledImage, int width, int height,
+		final double threshold, final boolean allowCleaving, final boolean grTrack)
+	{
+		int i = 0;
+		int j = 0;
+		int tempI;
+		int tempJ;
+		byte[] result = new byte[scaledImage.length];
+		final ArrayList<DetectedEdge> edges = new ArrayList<DetectedEdge>();
+		while ((i < (width - 1)) && (j < (height - 1))) {
+			while (j < height - 1 && i < width && scaledImage[i + j *
+				width] < threshold)
+			{
+				i++;
+				if (result[i + j * width] == 1) {
+					while (j < height - 1 && result[i + j * width] > 0) {
+						i++;
+						if (i == width && j < height - 2) {
+							i = 0;
+							j++;
+						}
+
+					}
+				}
+				if (i == width) {
+					j++;
+					if (j >= height - 1) break;
+					i = 0;
+				}
+			}
+			tempI = i;
+			tempJ = j;
+
+			if (i >= width - 1 && j >= height - 1) {
+				break; /*Go to end...*/
+			}
+			result[i + j * width] = 1;
+
+			// Tracing algorithm 
+			Vector<Object> returned = null;
+			if (!grTrack){
+				returned = traceEdge(scaledImage, width, height, result, threshold, i, j); //Contour tracing
+			}else{
+				//returned = traceGradient(scaledImage, result, threshold, i, j); //Contour tracing		
+			}
+			result = (byte[]) returned.get(0);
+			final Vector<Integer> newIit = (Vector<Integer>) returned.get(1);
+			final Vector<Integer> newJiit = (Vector<Integer>) returned.get(2);
+			// Tracing algorithm done...
+
+			if (allowCleaving) {
+				/*
+				final Vector<Vector<Vector<Integer>>> returnedVectors = cleaveEdge(
+					result, newIit, newJiit, 3.0, 6.0);
+				for (final Vector<Vector<Integer>> returnedVector : returnedVectors) {
+					// Fill edge within result..
+					final Vector<Integer> iit = new Vector<>();
+					final Vector<Integer> jiit = new Vector<>();
+					for (int ii = 0; ii < returnedVector.get(0).size(); ++ii) {
+						iit.add(returnedVector.get(0).get(ii));
+						jiit.add(returnedVector.get(1).get(ii));
+					}
+					final Vector<Object> results = fillResultEdge(result,width,height, iit, jiit,
+						scaledImage, threshold);
+					if (results != null) {
+						result = (byte[]) results.get(0);
+						edges.add(new DetectedEdge((Vector<Integer>) results.get(1),
+							(Vector<Integer>) results.get(2), (Integer) results.get(3)));
+					}
+				}
+				*/
+			}
+			else {
+				// Fill edge within result..
+				final Vector<Integer> iit = new Vector<>();
+				final Vector<Integer> jiit = new Vector<>();
+				for (int ii = 0; ii < newIit.size(); ++ii) {
+					iit.add(newIit.get(ii));
+					jiit.add(newJiit.get(ii));
+				}
+				final Vector<Object> results = fillResultEdge(result,width,height, iit, jiit,
+					scaledImage, threshold);
+				if (results != null) {
+					result = (byte[]) results.get(0);
+					edges.add(new DetectedEdge((Vector<Integer>) results.get(1),
+						(Vector<Integer>) results.get(2), (Integer) results.get(3)));
+				}
+			}
+			// Find next empty spot
+			i = tempI;
+			j = tempJ;
+			while (j < height && scaledImage[i + j * width] >= threshold) {
+				i++;
+				if (i == width) {
+					i = 0;
+					j++;
+				}
+			}
+		}
+
+		return edges;
+	}
+	
+	/*	Edge Tracing DetectedEdge
+	trace edge by advancing according to the previous direction
+	if above threshold, turn to negative direction
+	if below threshold, turn to positive direction
+	Idea taken from http://www.math.ucla.edu/~bertozzi/RTG/zhong07/report_zhong.pdf
+	The paper traced continent edges on map/satellite image
+	*/
+	private Vector<Object> traceEdge(final double[] scaledImage, int width, int height,
+		final byte[] result, final double threshold, int i, int j)
+	{
+		final Collection<Integer> iit = new Vector<>();
+		final Collection<Integer> jiit = new Vector<>();
+		iit.add(i);
+		jiit.add(j);
+		// begin by advancing right. Positive angles rotate the direction clockwise.
+		double direction = 0;
+		double previousDirection;
+		final int initI;
+		final int initJ;
+		initI = i;
+		initJ = j;
+		while (true) {
+			int counter = 0;
+			previousDirection = direction;
+			// Handle going out of bounds by considering out of bounds to be less than
+			// threshold
+			if ((i + ((int) Math.round(Math.cos(direction)))) >= 0 && (i + ((int) Math
+				.round(Math.cos(direction))) < width) && (j + ((int) Math.round(Math
+					.sin(direction))) >= 0) && (j + ((int) Math.round(Math.sin(
+						direction))) < height) && scaledImage[i + ((int) Math.round(Math
+							.cos(direction))) + (j + ((int) Math.round(Math.sin(
+								direction)))) * width] > threshold)
+			{
+				// Rotate counter clockwise
+				while (counter < 8 && i + ((int) Math.round(Math.cos(direction -
+					Math.PI / 4.0))) >= 0 && i + ((int) Math.round(Math.cos(direction -
+						Math.PI / 4.0))) < width && j + ((int) Math.round(Math.sin(
+							direction - Math.PI / 4.0))) >= 0 && j + ((int) Math.round(Math
+								.sin(direction - Math.PI / 4.0))) < height && scaledImage[i +
+									((int) Math.round(Math.cos(direction - Math.PI / 4.0))) + (j +
+										((int) Math.round(Math.sin(direction - Math.PI / 4.0)))) *
+										width] > threshold)
+				{
+					direction -= Math.PI / 4.0;
+					++counter;
+					if (Math.abs(direction - previousDirection) >= 180) {
+						break;
+					}
+				}
+			}
+			else {
+				// Rotate clockwise
+				while (counter < 8 && (i + ((int) Math.round(Math.cos(
+					direction))) < 0 || i + ((int) Math.round(Math.cos(
+						direction))) >= width || j + ((int) Math.round(Math.sin(
+							direction))) < 0 || j + ((int) Math.round(Math.sin(
+								direction))) >= height || scaledImage[i + ((int) Math.round(Math
+									.cos(direction))) + (j + ((int) Math.round(Math.sin(
+										direction)))) * width] < threshold))
+				{
+					direction += Math.PI / 4.0;
+					++counter;
+					if (Math.abs(direction - previousDirection) >= 180) {
+						break;
+					}
+				}
+
+			}
+			i += (int) Math.round(Math.cos(direction));
+			j += (int) Math.round(Math.sin(direction));
+			if ((i == initI && j == initJ) || counter > 7 || scaledImage[i + j *
+				width] < threshold || result[i + j * width] == 1 || result[i + j *
+					width] > 3)
+			{
+				for (int ii = 0; ii < result.length; ++ii) {
+					if (result[ii] > 1) {
+						result[ii] = 1;
+					}
+				}
+				final Vector<Object> returnVector = new Vector<>();
+				returnVector.add(result);
+				returnVector.add(iit);
+				returnVector.add(jiit);
+				return returnVector;
+			}
+			else {
+				if (result[i + j * width] == 0) {
+					result[i + j * width] = 2;
+				}
+				else if (result[i + j * width] != 1) {
+					result[i + j * width]++;
+				}
+				iit.add(i);
+				jiit.add(j);
+
+			}
+			// Keep steering counter clockwise not to miss single pixel structs...
+			direction -= Math.PI / 2.0;
+		}
+	}
+
+	// DetectedEdge version
+	private Vector<Object> fillResultEdge(byte[] result, int width, int height,
+		final Vector<Integer> iit, final Vector<Integer> jiit,
+		final double[] scaledImage, final double threshold)
+	{
+		if (iit.isEmpty()) {
+			return null;
+		}
+		Vector<Object> results = null;
+		int pixelsFilled = 0;
+		// Set initial fill pixel to the first pixel above threshold not on the
+		// border
+		boolean possible = true;
+		final byte[] tempResult = result.clone();
+		int[] tempCoordinates = findFillInit(tempResult,width,height, iit, jiit, scaledImage,
+			threshold);
+		while (possible && tempCoordinates != null) {
+			final Vector<Object> returned = resultFill(tempCoordinates[0],
+				tempCoordinates[1], tempResult,width,height);
+			possible = (Boolean) returned.get(0);
+			pixelsFilled += (Integer) returned.get(1);
+			tempCoordinates = findFillInit(tempResult,width,height, iit, jiit, scaledImage,
+				threshold);
+		}
+		if (possible) {
+			results = new Vector<>();
+			result = tempResult;
+			results.add(result);
+			results.add(iit);
+			results.add(jiit);
+			results.add(pixelsFilled);
+		}
+		return results;
+	}	
+	
+	// DetectedEdge. Find fill init by steering clockwise from next to previous
+	private int[] findFillInit(final byte[] result, int width, int height, final Vector<Integer> iit,
+		final Vector<Integer> jiit, final double[] scaledImage,
+		final double threshold)
+	{
+		final int[] returnCoordinates = new int[2];
+		final int[] steer = new int[2];
+		for (int j = 0; j < iit.size() - 1; ++j) {
+			returnCoordinates[0] = iit.get(j);
+			returnCoordinates[1] = jiit.get(j);
+			double direction = Math.atan2(jiit.get(j + 1) - returnCoordinates[1], iit
+				.get(j + 1) - returnCoordinates[0]);
+			for (int i = 0; i < 8; ++i) {
+				direction += Math.PI / 4.0;
+				steer[0] = (int) Math.round(Math.cos(direction));
+				steer[1] = (int) Math.round(Math.sin(direction));
+				/*Handle OOB*/
+				while ((returnCoordinates[0] + steer[0]) < 0 || (returnCoordinates[0] +
+					steer[0]) >= width || (returnCoordinates[1] + steer[1]) < 0 ||
+					(returnCoordinates[1] + steer[1]) >= height)
+				{
+					direction += Math.PI / 4.0;
+					steer[0] = (int) Math.round(Math.cos(direction));
+					steer[1] = (int) Math.round(Math.sin(direction));
+				}
+
+				if (result[returnCoordinates[0] + steer[0] + (returnCoordinates[1] +
+					steer[1]) * width] == 0 && scaledImage[returnCoordinates[0] +
+						steer[0] + (returnCoordinates[1] + steer[1]) * width] >= threshold)
+				{
+					returnCoordinates[0] += steer[0];
+					returnCoordinates[1] += steer[1];
+					return returnCoordinates;
+				}
+				if (result[returnCoordinates[0] + steer[0] + (returnCoordinates[1] +
+					steer[1]) * width] == 1)
+				{
+					break;
+				}
+			}
+		}
+		return null;
+	}
+	
+	private Vector<Object> resultFill(int i, int j, final byte[] tempResult, int width, int height) {
+		final Vector<Integer> initialI = new Vector<>();
+		final Vector<Integer> initialJ = new Vector<>();
+		initialI.add(i);
+		initialJ.add(j);
+		int pixelsFilled = 0;
+		while (!initialI.isEmpty() && initialI.lastElement() > 0 && initialI
+			.lastElement() < width - 1 && initialJ.lastElement() > 0 && initialJ
+				.lastElement() < height - 1)
+		{
+			i = initialI.lastElement();
+			j = initialJ.lastElement();
+			initialI.remove(initialI.size() - 1);
+			initialJ.remove(initialJ.size() - 1);
+
+			if (tempResult[i + j * width] == 0) {
+				tempResult[i + j * width] = 1;
+				++pixelsFilled;
+			}
+
+			if (tempResult[i - 1 + j * width] == 0) {
+				initialI.add(i - 1);
+				initialJ.add(j);
+			}
+
+			if (tempResult[i + 1 + j * width] == 0) {
+				initialI.add(i + 1);
+				initialJ.add(j);
+			}
+
+			if (tempResult[i + (j - 1) * width] == 0) {
+				initialI.add(i);
+				initialJ.add(j - 1);
+			}
+
+			if (tempResult[i + (j + 1) * width] == 0) {
+				initialI.add(i);
+				initialJ.add(j + 1);
+			}
+
+		}
+		final Vector<Object> returnValue = new Vector<>();
+		returnValue.add(initialI.isEmpty() && initialJ.isEmpty());
+		returnValue.add(pixelsFilled);
+		return returnValue;
 	}
 }
