@@ -60,5 +60,24 @@ public class Coordinate{
 		return a >= b ? a:b;
 	}
 	
+	//Enable comparing the ii and jj values to be used in ArrayList.contains()
+	@Override
+    public boolean equals(Object o) {
+  
+        // If the object is compared with itself then return true  
+        if (o == this) {
+            return true;
+        }
+  
+        /* If not an instance of the coordinate class, cannot be equal either! */
+        if (!(o instanceof Coordinate)) {
+            return false;
+        }else {
+			 // Compare the data members and return accordingly 
+			return Double.compare(ii, ((Coordinate) o).ii) == 0 && Double.compare(jj, ((Coordinate) o).jj) == 0;
+		}
+       
+    }
+	
 	
 }
