@@ -41,6 +41,11 @@ public class Coordinate{
 		this.jj = jj;
 	}
 	
+	public Coordinate(Coordinate a){
+		this.ii = a.ii;
+		this.jj = a.jj;
+	}
+	
 	public Coordinate subtract(Coordinate a){
 		return new Coordinate(this.ii-a.ii,this.jj-a.jj);
 	}
