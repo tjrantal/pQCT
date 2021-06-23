@@ -260,7 +260,7 @@ public class Cluster implements PlugIn {
 	
 
 	// Get image into which we'll start adding stuff
-	private static ImagePlus getRGBResultImage(final double[] values,
+	public static ImagePlus getRGBResultImage(final double[] values,
 		final int width, final int height, final String path)
 	{
 		final ImagePlus tempImage = new ImagePlus();
@@ -273,7 +273,7 @@ public class Cluster implements PlugIn {
 	
 
 	// Add colours for clusters
-	private static ImagePlus tintBoneCluster(final ImagePlus tempImage,	ArrayList<Coordinate> coordinates,double[] colourMultiplier){
+	public static ImagePlus tintBoneCluster(final ImagePlus tempImage,	ArrayList<Coordinate> coordinates,double[] colourMultiplier){
 		for (int c = 0; c<coordinates.size();++c){
 			int x = (int) coordinates.get(c).ii,y = (int) coordinates.get(c).jj;
 			final int value = tempImage.getProcessor().getPixel(x,y);

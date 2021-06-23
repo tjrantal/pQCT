@@ -43,6 +43,12 @@ import ij.ImagePlus;
 import sc.fiji.pQCT.io.ImageAndAnalysisDetails;
 import sc.fiji.pQCT.io.ScaledImageData;
 
+//Clustering
+import sc.fiji.pQCT.selectroi.Coordinate;
+import java.util.ArrayList;
+import sc.fiji.pQCT.utils.ClusterPoints;
+import sc.fiji.pQCT.Cluster;
+
 public abstract class RoiSelector {
 
 	public final ImageAndAnalysisDetails details;
@@ -456,6 +462,8 @@ public abstract class RoiSelector {
 	private Vector<Object> findEdge(final double[] scaledImage,
 		final double threshold, final boolean allowCleaving, final boolean grTrack)
 	{
+		
+		
 		int i = 0;
 		int j = 0;
 		int tempI;

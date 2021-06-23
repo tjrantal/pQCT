@@ -306,6 +306,19 @@ public class PqctAnalysis implements PlugIn {
 		RoiSelector roi = null;
 		RoiSelector softRoi = null;
 		
+		if (details.grTrackOn){
+			//Add point clustering onto ScaledImageData
+			scaledImageData.doClustering(details.boneThreshold);
+			ImagePlus resultImage = getRGBResultImage(scaledImageData.scaledImage, scaledImageData.width, scaledImageData.height,
+			"Clusters");
+			resultImage.setTitle(imp.getTitle() + "-cluster");
+		
+			//Add cluster Tints
+			resultImage = Cluster.tintBoneCluster(resultImage,	scaledImageData.getCluster1(),new double[]{1,0,0});
+			resultImage = Cluster.tintBoneCluster(resultImage,	scaledImageData.getCluster2(),new double[]{0,0,1});
+			resultImage.show();
+		}
+		
 
 		try {
 			if (details.cOn || details.mOn || details.conOn || details.dOn) {

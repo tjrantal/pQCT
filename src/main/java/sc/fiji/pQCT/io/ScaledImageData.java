@@ -30,6 +30,9 @@ package sc.fiji.pQCT.io;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import sc.fiji.pQCT.selectroi.Coordinate;
+import java.util.ArrayList;
+import sc.fiji.pQCT.utils.ClusterPoints;
 
 public class ScaledImageData {
 
@@ -39,6 +42,22 @@ public class ScaledImageData {
 	public final int width;
 	public final int height;
 	public final double pixelSpacing;
+	private ClusterPoints cp = null;
+	
+	public ArrayList<Coordinate> getCluster1(){
+		if (cp != null){
+			return cp.cluster1;
+		}else{
+			return null;
+		}
+	}
+	public ArrayList<Coordinate> getCluster2(){
+		if (cp != null){
+			return cp.cluster2;
+		}else{
+			return null;
+		}
+	}
 
 	// Constructor
 	public ScaledImageData(final int[] data, final int widthIn,
@@ -70,6 +89,23 @@ public class ScaledImageData {
 			// Flip the image around the horizontal axis...
 			flipVertically();
 		}
+		
+	}
+
+	//Use point clustering here
+	public void doClustering(double threshold){
+		
+		
+		ArrayList<Coordinate> testCoordinates = new ArrayList<Coordinate>();
+		for (int i = 0; i<height; ++i){
+			for (int j = 0; j<width; ++j){
+				//Add coordinates if it is a bone pixel
+				if (scaledImage[i*width+j] > threshold){
+					testCoordinates.add(new  Coordinate(j,i));
+				}
+			}
+		}
+		cp = new ClusterPoints(testCoordinates);
 	}
 
 	private void flipHorizontally() {
