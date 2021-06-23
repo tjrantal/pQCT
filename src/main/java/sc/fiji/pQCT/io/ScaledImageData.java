@@ -132,8 +132,8 @@ public class ScaledImageData {
 	public static double[] sobel(final double[] data, final int width, final int height){
 		double[] output1 = convolve(data,new double[][]{{1,0,-1},{2,0,-2},{1,0,-1}},width,height);
 		double[] output2 = convolve(data,new double[][]{{1,2,1},{0,0,0},{-1,-2,-1}},width,height);
-		double[] output3 = convolve(data,new double[][]{{2,1,0},{1,0,-1},{0,-1,-2}},width,height);
-		double[] output4 = convolve(data,new double[][]{{0,1,2},{-1,0,1},{-2,-1,0}},width,height);
+		//double[] output3 = convolve(data,new double[][]{{2,1,0},{1,0,-1},{0,-1,-2}},width,height);
+		//double[] output4 = convolve(data,new double[][]{{0,1,2},{-1,0,1},{-2,-1,0}},width,height);
 		double[] output = new double[width*height];
 		for (int i = 0; i<width*height; ++i){
 			output[i] = Math.sqrt(Math.pow(output1[i],2)+Math.pow(output2[i],2));
