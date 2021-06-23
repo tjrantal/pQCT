@@ -211,7 +211,7 @@ public class Cluster implements PlugIn {
 		for (int i = 0; i<imp.getHeight(); ++i){
 			for (int j = 0; j<imp.getWidth(); ++j){
 				//Add coordinates if it is a bone pixel
-				if (scaledImageData.scaledImage[i*imp.getWidth()+j] > 180){
+				if (scaledImageData.scaledImage[i*imp.getWidth()+j] > 280){
 					testCoordinates.add(new  Coordinate(j,i));
 				}
 			}
@@ -219,7 +219,7 @@ public class Cluster implements PlugIn {
 		IJ.log(String.format("Amalgamated test coordinates %d",testCoordinates.size()));
 		
 		ClusterPoints cp = new ClusterPoints(testCoordinates);
-		/*
+		
 		ImagePlus resultImage = getRGBResultImage(scaledImageData.scaledImage, scaledImageData.width, scaledImageData.height,
 			"Clusters");
 		resultImage.setTitle(imp.getTitle() + "-cluster");
@@ -229,7 +229,7 @@ public class Cluster implements PlugIn {
 		resultImage = tintBoneCluster(resultImage,	cp.cluster2,new double[]{0,0,1});
 		
 		resultImage.show();
-		*/
+		
 		
 	}
 
