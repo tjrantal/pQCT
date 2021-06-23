@@ -25,9 +25,9 @@ public class ClusterPoints{
 		testCoordinates.add(new Coordinate(2,0));
 		testCoordinates.add(new Coordinate(3,0));
 		//Second cluster
+		testCoordinates.add(new Coordinate(1,2));
 		testCoordinates.add(new Coordinate(2,2));
 		testCoordinates.add(new Coordinate(3,2));
-		testCoordinates.add(new Coordinate(4,2));
 		ClusterPoints cp = new ClusterPoints(testCoordinates);
 		
 		System.out.println("Result");
@@ -52,8 +52,8 @@ public class ClusterPoints{
 		}
 		Collections.sort(distances); 	//Sort distances here
 		
-		System.out.println("All distances");
-		printDistanceArray(distances);
+		//System.out.println("All distances");
+		//printDistanceArray(distances);
 		//Start going through the dataset with the farthest apart points as the cluster centres
 		ArrayList<Coordinate> classified = new ArrayList<Coordinate>(coordinates.size());	//Retain information on whether a coordinate is classified or not
 		cluster1 = new ArrayList<Coordinate>(coordinates.size());
@@ -64,14 +64,14 @@ public class ClusterPoints{
 		classified.add(new Coordinate(coordinates.get(distances.get(distances.size()-1).j)));	//Add the classified coordinate index
 		//Loop through the coordinates to classify each, stop once all coordinates have been classified
 		while (classified.size() <coordinates.size()){
-			System.out.println(String.format("c1 looking for %.0f %.0f",cluster1.get(cluster1.size()-1).ii,cluster1.get(cluster1.size()-1).jj));
+			//System.out.println(String.format("c1 looking for %.0f %.0f",cluster1.get(cluster1.size()-1).ii,cluster1.get(cluster1.size()-1).jj));
 			ArrayList<Distance> temp1 = getDistances(distances,cluster1.get(cluster1.size()-1),classified); 
-			System.out.println(String.format("c2 looking for %.0f %.0f",cluster2.get(cluster1.size()-1).ii,cluster1.get(cluster2.size()-1).jj));
+			//printDistanceArray(temp1);
+			
+			//System.out.println(String.format("c2 looking for %.0f %.0f",cluster2.get(cluster2.size()-1).ii,cluster2.get(cluster2.size()-1).jj));
 			ArrayList<Distance> temp2 = getDistances(distances,cluster2.get(cluster2.size()-1),classified);
-			System.out.println(String.format("printDist classified size %05d",classified.size()));
-			printDistanceArray(temp1);
-			System.out.println(String.format("printDist temp2"));
-			printDistanceArray(temp2);
+			//System.out.println(String.format("printDist temp2"));
+			//printDistanceArray(temp2);
 			//Add the coordinate with the shortest distance to the pertinent cluster
 			if (temp1.get(0).distance <= temp2.get(0).distance){
 				//Handle closest to temp1
@@ -91,6 +91,7 @@ public class ClusterPoints{
 					cluster1.add(new Coordinate(temp2.get(0).b));
 				}
 				classified.add(new Coordinate(temp2.get(0).b));
+				//System.out.println(String.format("printDist classified size %05d",classified.size()));
 			}
 		}
 		
